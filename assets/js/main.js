@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM fully loaded and parsed"); // Log: Check if script starts
+    console.log("DOM fully loaded and parsed");
 
     // --- Configuration & State ---
     const reportingSelect = document.getElementById('reportingCountry');
@@ -13,8 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let tradeChart = null; // Holds the Chart.js instance
     let currentChartData = null; // Holds the data used for the current chart
 
-    // UN Comtrade numerical codes (M49).
-    // If dropdowns are empty, double-check this object for syntax errors (commas, quotes)!
+    // UN Comtrade numerical codes (M49)
     const countryCodes = {
         "World": "0", "Afghanistan": "4", "Albania": "8", "Algeria": "12", "American Samoa": "16",
         "Andorra": "20", "Angola": "24", "Antigua and Barbuda": "28", "Azerbaijan": "31", "Argentina": "32",
@@ -71,13 +70,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /** Populates country dropdowns */
     function populateDropdowns() {
-        console.log("Attempting to populate dropdowns..."); // Log: Check if function starts
+        console.log("Attempting to populate dropdowns...");
         try {
             // Sort countries alphabetically by name for better UX
             const sortedCountries = Object.entries(countryCodes)
-                .sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB));
+                .sort(([nameA, nameB]) => nameA.localeCompare(nameB));
 
-            // Clear existing options (safer method)
+            // Clear existing options
             reportingSelect.options.length = 0;
             partnerSelect.options.length = 0;
 
@@ -98,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 count++;
             });
 
-            console.log(`Populated dropdowns with ${count} countries.`); // Log: Check if loop completes
+            console.log(`Populated dropdowns with ${count} countries.`);
 
             // Set default selections (e.g., Israel and Azerbaijan)
             reportingSelect.value = "376"; // Israel Code
@@ -106,18 +105,17 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Default countries set.");
 
         } catch (error) {
-            console.error("Error in populateDropdowns:", error); // Log: Catch errors here
+            console.error("Error in populateDropdowns:", error);
             errorDisplay.textContent = "Error populating country list. Check console.";
             errorDisplay.style.display = 'block';
         }
     }
 
-    /** Fetches data from UN Comtrade API v1 for multiple years */
+    /** Fetches data from UN Comtrade API using CORS proxy */
     async function fetchComtradeData(reportingCode, partnerCode, years) {
-        console.log(`Workspaceing data using V1 API for ${reportingCode} <-> ${partnerCode} for years: ${years.join(', ')}`);
+        console.log(`Fetching data for ${reportingCode} <-> ${partnerCode} for years: ${years.join(', ')}`);
 
-        // --- Parameters for Comtrade API v1 (CHECK DOCUMENTATION!) ---
-        // These might change based on API specifics.
+        // --- Parameters for Comtrade API v1 ---
         const typeCode = 'C'; // C = Commodities
         const freqCode = 'A'; // A = Annual
         const clCode = 'HS';  // HS = Harmonized System classification
@@ -127,79 +125,103 @@ document.addEventListener('DOMContentLoaded', () => {
         // Construct the period string (e.g., "2020,2021,2022")
         const period = years.join(',');
 
-        // Construct the URL for the newer API endpoint
-        // Example structure - REFER TO OFFICIAL DOCS at https://comtradeapi.un.org/docs
-        const url = `https://comtradeapi.un.org/public/v1/getMetadata/${typeCode}/${freqCode}/${clCode}?reporterCode=${reportingCode}&partnerCode=${partnerCode}&period=${period}&tradeDirection=${rgCode}&aggregateBy=${cmdCode}`; // aggregateBy parameter might be different
-
+        // Base API URL
+        const apiUrl = `https://comtradeapi.un.org/public/v1/getMetadata/${typeCode}/${freqCode}/${clCode}?reporterCode=${reportingCode}&partnerCode=${partnerCode}&period=${period}&tradeDirection=${rgCode}&aggregateBy=${cmdCode}`;
+        
+        // Use CORS proxy to avoid CORS issues
         const CORS_PROXY = 'https://corsproxy.io/?';
-const API_URL = 'https://comtradeapi.un.org/public/v1/getMetadata/C/A/HS?reporterCode=376&partnerCode=31&period=2020,2021,2022,2023,2024&tradeDirection=1,2&aggregateBy=TOTAL';
+        const proxyUrl = CORS_PROXY + encodeURIComponent(apiUrl);
+        
+        console.log("Requesting URL (via proxy):", proxyUrl);
 
-fetch(CORS_PROXY + encodeURIComponent(API_URL))
-  .then(response => response.json())
-  .then(data => {
-    // Process data
-  });
-
-
-        console.log("Requesting URL:", url);
-
-        return fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    // Try to get error details from the response body if possible
-                    return response.json().catch(() => null).then(errorData => {
-                        // Construct a meaningful error message
-                        const message = `API Error (${response.status} ${response.statusText}): ${errorData?.message || errorData?.error || 'No details available.'}`;
-                        console.error("API Response Error Data:", errorData);
-                        throw new Error(message);
-                    });
+        try {
+            // First attempt to fetch data via the CORS proxy
+            const response = await fetch(proxyUrl);
+            
+            if (!response.ok) {
+                throw new Error(`API Error (${response.status} ${response.statusText})`);
+            }
+            
+            const data = await response.json();
+            console.log("API Raw Response:", data);
+            
+            // Process the API response
+            const processedData = [];
+            
+            // Check if data exists and is properly structured
+            if (data && data.data && Array.isArray(data.data)) {
+                // Create a map to organize data by year
+                const yearData = {};
+                
+                data.data.forEach(item => {
+                    const year = item.period || item.year;
+                    const tradeValue = item.tradeValue || 0;
+                    const flow = item.tradeDirection || item.flowCode;
+                    
+                    if (!yearData[year]) {
+                        yearData[year] = { year: parseInt(year), imports: 0, exports: 0 };
+                    }
+                    
+                    // Map trade flow values based on API response structure
+                    if (flow === 'Import' || flow === '1') {
+                        yearData[year].imports += tradeValue;
+                    } else if (flow === 'Export' || flow === '2') {
+                        yearData[year].exports += tradeValue;
+                    }
+                });
+                
+                // Convert the map to an array sorted by year
+                years.forEach(year => {
+                    if (yearData[year]) {
+                        processedData.push(yearData[year]);
+                    } else {
+                        processedData.push({ year: parseInt(year), imports: 0, exports: 0 });
+                    }
+                });
+            } else {
+                console.warn("Received data from API, but the structure wasn't as expected.", data);
+                // Create empty data for requested years to avoid breaking chart
+                processedData.push(...years.map(year => ({ year: parseInt(year), imports: 0, exports: 0 })));
+            }
+            
+            return processedData;
+            
+        } catch (error) {
+            console.error("API fetch error:", error);
+            
+            // Fall back to local data file if available
+            try {
+                console.log("Attempting to load from local data file...");
+                const localResponse = await fetch('./data/comtrade.json');
+                
+                if (!localResponse.ok) {
+                    throw new Error("Local data file not available");
                 }
-                return response.json(); // Assuming the V1 API returns JSON directly
-            })
-            .then(data => {
-                console.log("API V1 Raw Response:", data); // Log the raw response to understand its structure
-
-                // --- Process the V1 API Response ---
-                // The structure of the response from the V1 API will likely be different!
-                // You NEED to inspect the 'data' object (using console.log above)
-                // and adapt the processing logic below accordingly.
-
-                const processedData = {}; // Use an object keyed by year for easier assembly
-
-                if (data && data.data && Array.isArray(data.data)) { // Check if data exists and is an array (common pattern)
-                    data.data.forEach(item => {
-                        const year = item.period; // Assuming 'period' holds the year
-                        const tradeValue = item.tradeValue || 0;
-                        const flow = item.tradeDirection; // Assuming 'tradeDirection' is 'Import' or 'Export'
-
-                        if (!processedData[year]) {
-                            processedData[year] = { year: parseInt(year), imports: 0, exports: 0 };
-                        }
-
-                        if (flow === 'Import') { // Check the exact value used by the API
-                            processedData[year].imports += tradeValue; // Sum if multiple entries per year? Check API docs.
-                        } else if (flow === 'Export') { // Check the exact value used by the API
-                            processedData[year].exports += tradeValue;
-                        }
-                    });
-                } else {
-                    console.warn("Received data from API V1, but the structure wasn't as expected or contained no 'data' array.", data);
-                    // Return empty data for requested years to avoid breaking chart
-                }
-
-
-                // Convert processed data object back to an array matching the requested years
-                return years.map(year => processedData[year] || { year: year, imports: 0, exports: 0 });
-            });
-        // Note: This V1 call attempts to get all years in one request.
-        // If the API doesn't support multiple years like this, you might need to loop
-        // and make separate fetch calls for each year again. CHECK THE DOCS.
+                
+                const localData = await localResponse.json();
+                console.log("Local data loaded:", localData);
+                
+                // Extract relevant data based on selected countries
+                // This assumes your local data file has a structure that can be processed
+                // Modify this based on your actual local data structure
+                const filteredData = years.map(year => ({ 
+                    year: parseInt(year), 
+                    imports: 0, 
+                    exports: 0 
+                }));
+                
+                return filteredData;
+                
+            } catch (localError) {
+                console.error("Local data fetch error:", localError);
+                throw new Error(`Failed to fetch data: ${error.message}. Check console for details.`);
+            }
+        }
     }
 
-
-    // ... (renderChart function remains the same) ...
+    /** Renders the chart with trade data */
     function renderChart(data, reportingName, partnerName) {
-        console.log("Rendering chart..."); // Log: Check if function starts
+        console.log("Rendering chart...");
         currentChartData = data;
         const years = data.map(d => d.year);
         const exports = data.map(d => d.exports);
@@ -219,35 +241,50 @@ fetch(CORS_PROXY + encodeURIComponent(API_URL))
         try {
             tradeChart = new Chart(ctx, {
                 type: 'line',
-                data: { /* same as before */
+                data: {
                     labels: years,
                     datasets: [
                         {
                             label: `Exports from ${reportingName} to ${partnerName} (USD)`,
                             data: exports,
-                            borderColor: '#0d6efd', backgroundColor: '#0d6efd',
-                            tension: 0.1, fill: false, pointRadius: 4, pointHoverRadius: 7,
+                            borderColor: '#0d6efd', 
+                            backgroundColor: '#0d6efd',
+                            tension: 0.1, 
+                            fill: false, 
+                            pointRadius: 4, 
+                            pointHoverRadius: 7,
                         },
                         {
                             label: `Imports by ${reportingName} from ${partnerName} (USD)`,
                             data: imports,
-                            borderColor: '#dc3545', backgroundColor: '#dc3545',
-                            tension: 0.1, fill: false, pointRadius: 4, pointHoverRadius: 7,
+                            borderColor: '#dc3545', 
+                            backgroundColor: '#dc3545',
+                            tension: 0.1, 
+                            fill: false, 
+                            pointRadius: 4, 
+                            pointHoverRadius: 7,
                         }
                     ]
                 },
-                options: { /* same as before */
-                    responsive: true, maintainAspectRatio: false,
+                options: {
+                    responsive: true, 
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: { labels: { color: textColor } },
                         tooltip: {
-                            mode: 'index', intersect: false,
+                            mode: 'index', 
+                            intersect: false,
                             callbacks: {
                                 label: function (context) {
                                     let label = context.dataset.label || '';
                                     if (label) { label += ': '; }
                                     if (context.parsed.y !== null) {
-                                        label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(context.parsed.y);
+                                        label += new Intl.NumberFormat('en-US', { 
+                                            style: 'currency', 
+                                            currency: 'USD', 
+                                            minimumFractionDigits: 0, 
+                                            maximumFractionDigits: 0 
+                                        }).format(context.parsed.y);
                                     }
                                     return label;
                                 }
@@ -255,7 +292,10 @@ fetch(CORS_PROXY + encodeURIComponent(API_URL))
                         }
                     },
                     scales: {
-                        x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                        x: { 
+                            ticks: { color: textColor }, 
+                            grid: { color: gridColor } 
+                        },
                         y: {
                             beginAtZero: true,
                             ticks: {
@@ -272,18 +312,18 @@ fetch(CORS_PROXY + encodeURIComponent(API_URL))
                     }
                 }
             });
-            console.log("Chart rendered successfully."); // Log: Success
+            console.log("Chart rendered successfully.");
         } catch (error) {
-            console.error("Error rendering chart:", error); // Log: Catch chart errors
+            console.error("Error rendering chart:", error);
             errorDisplay.textContent = "Error displaying chart. Check console.";
             errorDisplay.style.display = 'block';
             chartTitle.textContent = `Error displaying chart`;
         }
     }
 
-    // ... (updateDashboard function remains the same, but check logs) ...
+    /** Updates the dashboard with selected country data */
     async function updateDashboard() {
-        console.log("Updating dashboard..."); // Log: Check start
+        console.log("Updating dashboard...");
         const reportingCode = reportingSelect.value;
         const partnerCode = partnerSelect.value;
         const reportingName = reportingSelect.options[reportingSelect.selectedIndex]?.text || 'Selected Country';
@@ -292,7 +332,11 @@ fetch(CORS_PROXY + encodeURIComponent(API_URL))
         if (!reportingCode || !partnerCode) {
             console.log("Update skipped: Countries not selected.");
             chartTitle.textContent = "Please select both reporting and partner countries.";
-            if (tradeChart) { tradeChart.destroy(); currentChartData = null; tradeChart = null; }
+            if (tradeChart) { 
+                tradeChart.destroy(); 
+                currentChartData = null; 
+                tradeChart = null; 
+            }
             return;
         }
         if (reportingCode === partnerCode) {
@@ -300,7 +344,11 @@ fetch(CORS_PROXY + encodeURIComponent(API_URL))
             chartTitle.textContent = "Reporting and Partner country cannot be the same.";
             errorDisplay.textContent = "Please select two different countries.";
             errorDisplay.style.display = 'block';
-            if (tradeChart) { tradeChart.destroy(); currentChartData = null; tradeChart = null; }
+            if (tradeChart) { 
+                tradeChart.destroy(); 
+                currentChartData = null; 
+                tradeChart = null; 
+            }
             return;
         }
 
@@ -317,13 +365,12 @@ fetch(CORS_PROXY + encodeURIComponent(API_URL))
 
         try {
             const currentYear = new Date().getFullYear();
-            // Get last 5 *completed* years. E.g., if it's early 2025, use 2020-2024.
-            // Comtrade data often lags, so using year-1 as the latest might be safer.
+            // Get last 5 completed years
             const latestYear = currentYear - 1;
             const yearsToFetch = Array.from({ length: 5 }, (_, i) => latestYear - 4 + i);
 
             const tradeData = await fetchComtradeData(reportingCode, partnerCode, yearsToFetch);
-            console.log("Fetched data:", tradeData); // Log: See fetched data
+            console.log("Fetched data:", tradeData);
 
             const hasData = tradeData.some(d => d.exports > 0 || d.imports > 0);
             if (!hasData) {
@@ -331,17 +378,25 @@ fetch(CORS_PROXY + encodeURIComponent(API_URL))
                 errorDisplay.textContent = `No trade data found for ${reportingName} and ${partnerName} between ${yearsToFetch[0]}-${yearsToFetch[yearsToFetch.length - 1]}.`;
                 errorDisplay.style.display = 'block';
                 chartTitle.textContent = `No data available for ${reportingName} and ${partnerName}`;
-                if (tradeChart) { tradeChart.destroy(); currentChartData = null; tradeChart = null; } // Ensure chart is gone
+                if (tradeChart) { 
+                    tradeChart.destroy(); 
+                    currentChartData = null; 
+                    tradeChart = null; 
+                }
             } else {
                 renderChart(tradeData, reportingName, partnerName);
             }
 
         } catch (error) {
             console.error("Failed to fetch or render data:", error);
-            errorDisplay.textContent = `Failed to load data: ${error.message}. Check console for details (e.g., API rate limits, network issues).`;
+            errorDisplay.textContent = `Failed to load data: ${error.message}. Check console for details.`;
             errorDisplay.style.display = 'block';
             chartTitle.textContent = `Error loading data`;
-            if (tradeChart) { tradeChart.destroy(); currentChartData = null; tradeChart = null; } // Ensure chart is gone on error
+            if (tradeChart) { 
+                tradeChart.destroy(); 
+                currentChartData = null; 
+                tradeChart = null; 
+            }
         } finally {
             loadingIndicator.style.display = 'none';
             reportingSelect.disabled = false;
@@ -350,23 +405,22 @@ fetch(CORS_PROXY + encodeURIComponent(API_URL))
         }
     }
 
-
     /** Sets up dark mode toggle functionality */
     function initDarkMode() {
-        console.log("Initializing dark mode..."); // Log: Check start
+        console.log("Initializing dark mode...");
 
         const applyDarkMode = (isDark) => {
-            console.log(`Applying dark mode: ${isDark}`); // Log: State change
+            console.log(`Applying dark mode: ${isDark}`);
             document.body.classList.toggle("dark", isDark);
-            console.log("Dark class toggled on body. Current classes:", document.body.className); // Log: Verify class
+            console.log("Dark class toggled on body. Current classes:", document.body.className);
 
             // Re-render chart with current data if it exists, to apply theme colors
-            if (tradeChart && currentChartData) { // Check both exist
+            if (tradeChart && currentChartData) {
                 console.log("Re-rendering chart for theme change...");
                 try {
                     const reportingName = reportingSelect.options[reportingSelect.selectedIndex]?.text || 'Selected Country';
                     const partnerName = partnerSelect.options[partnerSelect.selectedIndex]?.text || 'Selected Country';
-                    renderChart(currentChartData, reportingName, partnerName); // Use stored data
+                    renderChart(currentChartData, reportingName, partnerName);
                 } catch (error) {
                     console.error("Error re-rendering chart on theme change:", error);
                 }
@@ -377,28 +431,28 @@ fetch(CORS_PROXY + encodeURIComponent(API_URL))
 
         darkModeToggle.addEventListener("change", () => {
             const isChecked = darkModeToggle.checked;
-            console.log(`Dark mode toggle changed. Checked: ${isChecked}`); // Log: Event fire
-            localStorage.setItem("darkModeEnabled", isChecked); // Use boolean directly? Storage saves as string.
+            console.log(`Dark mode toggle changed. Checked: ${isChecked}`);
+            localStorage.setItem("darkModeEnabled", isChecked);
             applyDarkMode(isChecked);
         });
 
         // Apply initial theme based on localStorage or system preference
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const savedMode = localStorage.getItem("darkModeEnabled"); // Will be "true", "false", or null
+        const savedMode = localStorage.getItem("darkModeEnabled");
 
         // Determine initial state: use saved preference if it exists, otherwise use system preference
         let initialDarkMode = (savedMode !== null) ? (savedMode === "true") : prefersDark;
 
-        console.log(`Initial dark mode check - Saved: ${savedMode}, PrefersDark: ${prefersDark}, InitialDarkMode: ${initialDarkMode}`); // Log: Initial values
+        console.log(`Initial dark mode check - Saved: ${savedMode}, PrefersDark: ${prefersDark}, InitialDarkMode: ${initialDarkMode}`);
 
         darkModeToggle.checked = initialDarkMode;
-        applyDarkMode(initialDarkMode); // Apply the theme immediately on load
-        console.log("Dark mode initialized."); // Log: Finish
+        applyDarkMode(initialDarkMode);
+        console.log("Dark mode initialized.");
     }
 
     /** Main initialization function */
     function init() {
-        console.log("Initializing application..."); // Log: Start init
+        console.log("Initializing application...");
         // Initialize theme first, so UI elements are styled correctly when populated
         initDarkMode();
         // Populate dropdowns next
@@ -416,18 +470,9 @@ fetch(CORS_PROXY + encodeURIComponent(API_URL))
             console.log("Skipping initial dashboard update (no default countries selected/populated).");
             chartTitle.textContent = "Please select countries to view trade data.";
         }
-        console.log("Application initialization complete."); // Log: Finish init
+        console.log("Application initialization complete.");
     }
-
-    fetch('./data/comtrade.json')
-  .then(response => response.json())
-  .then(data => {
-    // Process your data here
-  });
 
     // --- Run Initialization ---
     init();
 });
-
-
-
