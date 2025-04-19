@@ -21,14 +21,20 @@ document.addEventListener('DOMContentLoaded', () => {
         '71': '71', // Minerals: Pearls, Gems, Diamonds
         '72': '72', // Minerals: Iron & Steel
         '28': '28', // Chemicals: Inorganic
+        '29': '29', // <--- Add Chemicals: Organic
+        '30': '30', // <--- Add Pharmaceutical Products
         '39': '39', // Plastics & Articles Thereof
         '61': '61', // Clothing: Knitted Apparel
         '62': '62', // Clothing: Non-Knitted Apparel
+        '64': '64', // <--- Add Footwear, Gaiters
         '84': '84', // Machinery & Mechanical Appliances
         '85': '85', // Electrical Machinery & Equipment
+        '87': '87', // <--- Add Vehicles (Cars, Trucks, etc.)
         '88': '88', // Aircraft, Spacecraft & Parts
-        '90': '90'  // Optical, Photo, Medical Instruments
-        // Add any other mappings if you add more options to HTML
+        '90': '90', // Optical, Photo, Medical Instruments
+        '94': '94', // <--- Add Furniture, Bedding, Lamps
+        // Add mappings for any other options you included in HTML
+        // e.g., '76': '76' for Aluminum
     };
 
     function showLoading(isLoading) {
