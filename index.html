@@ -20,7 +20,16 @@
             <label class="form-check-label" for="darkModeToggle">Dark Mode</label>
         </div>
         <hr>
-
+        <div class="row mb-3 g-3">
+            <div class="col-md-6">
+                <label for="startYear" class="form-label">Start Year</label>
+                <input type="number" class="form-select" id="startYear" value="2019" min="1988" max="2025">
+            </div>
+            <div class="col-md-6">
+                <label for="endYear" class="form-label">End Year</label>
+                <input type="number" class="form-select" id="endYear" value="2025" min="1988" max="2025">
+            </div>
+        </div>
         <div class="row mb-3 g-3">
             <div class="col-md-6">
                 <label for="reportingCountry" class="form-label">Reporting Country</label>
@@ -28,6 +37,9 @@
                     <option value="">Select Country...</option>
                 </select>
             </div>
+
+
+
             <div class="col-md-6">
                 <label for="partnerCountry" class="form-label">Partner Country</label>
                 <select class="form-select" id="partnerCountry">
@@ -35,6 +47,21 @@
                 </select>
             </div>
         </div>
+
+        <div class="row mb-3 g-3">
+            <div class="col-md-12">
+                <label for="tradeCategory" class="form-label">Trade Category</label>
+                <select class="form-select" id="tradeCategory">
+                    <option value="TOTAL">Total Trade</option>
+                    <option value="AG2">Agriculture (Aggregate)</option>
+                    <option value="27">Mineral Fuels, Oils, etc.</option>
+                    <option value="72">Iron and Steel</option>
+                    <option value="84">Machinery, Nuclear Reactors, Boilers</option>
+                    <option value="85">Electrical Machinery & Equipment</option>
+                    <option value="61">Apparel & Clothing (Knitted)</option>
+                    </select>
+            </div>
+       </div>
 
          <div id="loadingIndicator" class="text-center my-3" style="display: none;">
              <div class="spinner-border text-primary" role="status">
