@@ -1,0 +1,97 @@
+/* Define CSS variables for theming */
+:root {
+    --bg-light: #f8f9fa;
+    --text-light: #212529;
+    --card-bg-light: #ffffff;
+    --grid-color-light: rgba(0, 0, 0, 0.1);
+
+    --bg-dark: #1a1a1a; /* Darker background */
+    --text-dark: #e0e0e0;
+    --card-bg-dark: #2c2c2c; /* Slightly lighter card */
+    --grid-color-dark: rgba(255, 255, 255, 0.1);
+
+    /* Default to light theme */
+    --bg: var(--bg-light);
+    --text: var(--text-light);
+    --card-bg: var(--card-bg-light);
+    --grid-color: var(--grid-color-light);
+}
+
+/* Apply dark theme variables when .dark class is present */
+body.dark {
+    --bg: var(--bg-dark);
+    --text: var(--text-dark);
+    --card-bg: var(--card-bg-dark);
+    --grid-color: var(--grid-color-dark);
+}
+
+/* General body styling */
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Card styling */
+.card {
+    background-color: var(--card-bg);
+    border-radius: 8px; /* Slightly softer corners */
+    border: none; /* Remove default border */
+    transition: background-color 0.3s ease;
+}
+
+/* Style selects for dark mode */
+body.dark .form-select {
+    background-color: var(--card-bg-dark);
+    color: var(--text-dark);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.dark .form-select:focus {
+     background-color: var(--card-bg-dark);
+     color: var(--text-dark);
+     border-color: #86b7fe; /* Bootstrap focus color */
+     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Ensure chart title color updates */
+#chartTitle {
+    color: var(--text);
+}
+
+/* Loading indicator style (optional, Bootstrap spinner used in HTML) */
+#loadingIndicator p {
+    margin-top: 10px;
+    color: var(--text);
+}
+
+/* Error message style */
+#errorDisplay {
+    word-wrap: break-word; /* Prevent long error messages from overflowing */
+}
+
+h1 
+{
+    justify-content: center;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    flex: auto;
+    padding: 10px;
+
+}
+
+.form-check,
+.form-switch
+{
+    justify-content: left;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    flex: auto;
+}
+
+.form-check-input
+{
+    margin-right: 5px;
+}
