@@ -1,20 +1,31 @@
 /* Define CSS variables for theming */
 :root {
+    /* Light Theme */
     --bg-light: #f8f9fa;
     --text-light: #212529;
     --card-bg-light: #ffffff;
     --grid-color-light: rgba(0, 0, 0, 0.1);
+    --select-bg-light: #ffffff;
+    --select-text-light: #212529;
+    --select-border-light: #ced4da;
 
-    --bg-dark: #1a1a1a; /* Darker background */
-    --text-dark: #e0e0e0;
-    --card-bg-dark: #2c2c2c; /* Slightly lighter card */
-    --grid-color-dark: rgba(255, 255, 255, 0.1);
+    /* Dark Theme */
+    --bg-dark: #1a1a1a;          /* Dark background */
+    --text-dark: #e0e0e0;         /* Light text for general UI */
+    --card-bg-dark: #2c2c2c;        /* Dark card background */
+    --grid-color-dark: rgba(255, 255, 255, 0.15); /* Faint white grid for chart */
+    --select-bg-dark: #2c2c2c;       /* Dark select background */
+    --select-text-dark: #e0e0e0;    /* Light text for select */
+    --select-border-dark: rgba(255, 255, 255, 0.2); /* Lighter border for select */
 
-    /* Default to light theme */
+    /* Default (Light) */
     --bg: var(--bg-light);
     --text: var(--text-light);
     --card-bg: var(--card-bg-light);
-    --grid-color: var(--grid-color-light);
+    --grid-color: var(--grid-color-light); /* General grid color (if used outside chart) */
+    --select-bg: var(--select-bg-light);
+    --select-text: var(--select-text-light);
+    --select-border: var(--select-border-light);
 }
 
 /* Apply dark theme variables when .dark class is present */
@@ -22,7 +33,10 @@ body.dark {
     --bg: var(--bg-dark);
     --text: var(--text-dark);
     --card-bg: var(--card-bg-dark);
-    --grid-color: var(--grid-color-dark);
+    --grid-color: var(--grid-color-dark); /* General grid color */
+    --select-bg: var(--select-bg-dark);
+    --select-text: var(--select-text-dark);
+    --select-border: var(--select-border-dark);
 }
 
 /* General body styling */
@@ -30,47 +44,80 @@ body {
     background-color: var(--bg);
     color: var(--text);
     transition: background-color 0.3s ease, color 0.3s ease;
+    min-height: 100vh; /* Ensure body takes full height */
+    display: flex;
+    flex-direction: column; /* Allow footer sticking */
 }
+
+main {
+    flex-grow: 1; /* Push footer down */
+}
+
 
 /* Card styling */
 .card {
     background-color: var(--card-bg);
-    border-radius: 8px; /* Slightly softer corners */
-    border: none; /* Remove default border */
+    border-radius: 8px;
+    border: none;
     transition: background-color 0.3s ease;
+    color: var(--text); /* Ensure card text inherits theme color */
 }
 
-/* Style selects for dark mode */
-body.dark .form-select {
-    background-color: var(--card-bg-dark);
-    color: var(--text-dark);
-    border-color: rgba(255, 255, 255, 0.2);
+/* Style selects for both themes using variables */
+.form-select {
+    background-color: var(--select-bg);
+    color: var(--select-text);
+    border-color: var(--select-border);
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
-body.dark .form-select:focus {
-     background-color: var(--card-bg-dark);
-     color: var(--text-dark);
-     border-color: #86b7fe; /* Bootstrap focus color */
-     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+.form-select:focus {
+   background-color: var(--select-bg); /* Keep background on focus */
+   color: var(--select-text); /* Keep text color on focus */
+   border-color: #86b7fe; /* Standard Bootstrap focus color */
+   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Standard Bootstrap focus shadow */
 }
+
+/* Style options within select dropdowns for dark mode */
+body.dark select option {
+    background-color: var(--card-bg-dark); /* Match select background */
+    color: var(--text-dark); /* Ensure text is light */
+}
+
 
 /* Ensure chart title color updates */
 #chartTitle {
     color: var(--text);
+    transition: color 0.3s ease;
 }
 
-/* Loading indicator style (optional, Bootstrap spinner used in HTML) */
+/* Loading indicator style */
 #loadingIndicator p {
     margin-top: 10px;
     color: var(--text);
+    transition: color 0.3s ease;
 }
 
 /* Error message style */
 #errorDisplay {
     word-wrap: break-word; /* Prevent long error messages from overflowing */
+    color: #dc3545; /* Standard Bootstrap danger color for errors */
+    background-color: rgba(220, 53, 69, 0.1); /* Faint red background */
+    border: 1px solid rgba(220, 53, 69, 0.2);
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    margin-top: 0.5rem;
+    display: none; /* Initially hidden */
 }
 
-h1 
+body.dark #errorDisplay {
+     color: #f8d7da; /* Lighter red text for dark mode */
+     background-color: rgba(248, 215, 218, 0.1);
+     border-color: rgba(248, 215, 218, 0.2);
+}
+
+
+h1
 {
     justify-content: center;
     text-align: center;
@@ -78,7 +125,8 @@ h1
     align-items: center;
     flex: auto;
     padding: 10px;
-
+    color: var(--text); /* Ensure H1 uses theme color */
+    transition: color 0.3s ease;
 }
 
 .form-check,
@@ -89,9 +137,35 @@ h1
     display: flex;
     align-items: center;
     flex: auto;
+    padding-left: 1.5em; /* Align with Bootstrap defaults better */
+}
+
+.form-check-label {
+    padding-left: 0.5em; /* Space between switch and label */
+    color: var(--text); /* Ensure label uses theme color */
+    transition: color 0.3s ease;
 }
 
 .form-check-input
 {
     margin-right: 5px;
+    /* Dark mode specific styling for the switch track/thumb if needed */
+}
+
+body.dark .form-check-input {
+    background-color: #495057; /* Darker background when off */
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+body.dark .form-check-input:checked {
+    background-color: #0d6efd; /* Bootstrap primary color */
+    border-color: #0d6efd;
+}
+
+body.dark .form-switch .form-check-input {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba(255,255,255,.25)'/%3e%3c/svg%3e"); /* Lighter thumb */
+}
+
+body.dark .form-switch .form-check-input:checked {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e"); /* White thumb when checked */
 }
