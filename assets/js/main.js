@@ -1,4 +1,159 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+    // --- START: Manual Translation Code ---
+
+    const translations = {
+        // English Translations (Fallback)
+        en: {
+            dashboardTitle: "Trade Dashboard", labelDarkMode: "Dark Mode", labelLanguage: "Language: ",
+            labelStartYear: "Start Year", labelEndYear: "End Year", labelReportingCountry: "Reporting Country",
+            labelPartnerCountry: "Partner Country", labelTradeCategory: "Trade Category", loadingText: "Loading...",
+            loadingTradeData: "Loading trade data...", errorLoadingCountryList: "Could not load country list: {{message}}",
+            errorFetchTradeData: "Failed to fetch trade data: {{message}}",
+            errorNoData: "No trade data found for {{reporter}} and {{partner}} (Category: {{category}}) for years {{years}}. Data might be unavailable.",
+            errorInvalidYearRange: "Please select a valid year range.", errorMaxYearRange: "Please select a range of {{maxYears}} years or less.",
+            errorSameCountry: "Reporting and partner countries cannot be the same (unless one is \"World\"). Please select different countries.",
+            errorInvalidSelection: "Invalid Selection", errorRenderingChart: "Error rendering chart.",
+            chartTitleDefault: "Select countries to view trade data", chartTitleLoading: "Loading trade data...",
+            chartTitleError: "Failed to load data", chartTitleNoData: "No data available for this selection/period",
+            chartTitlePattern: "Trade: {{reporter}} <=> {{partner}} ({{category}})", chartLegendImports: "Imports by Reporter",
+            chartLegendExports: "Exports by Reporter", chartAxisYLabel: "Trade Value (USD)", chartAxisXLabel: "Year",
+            optionSelectCountry: "Select Country...", optionTOTAL: "Total Trade", optionAGRMULTI: "Agriculture",
+            option25: "Minerals: Salt, Stone, Cement", option27: "Minerals: Fuels, Oils", option71: "Minerals: Pearls, Gems, Diamonds",
+            option72: "Minerals: Iron & Steel", option28: "Chemicals: Inorganic", option29: "Chemicals: Organic",
+            option30: "Pharmaceutical Products", option39: "Plastics & Articles Thereof", option64: "Footwear, Gaiters",
+            option61: "Clothing: Knitted Apparel", option62: "Clothing: Non-Knitted Apparel", option84: "Machinery & Mechanical Appliances",
+            option85: "Electrical Machinery & Equipment", option87: "Vehicles (Cars, Trucks, etc.)", option88: "Aircraft, Spacecraft & Parts",
+            option90: "Optical, Photo, Medical Instruments", option94: "Furniture, Bedding, Lamps"
+        },
+        // Hebrew Translations
+        he: {
+            dashboardTitle: "לוח בקרה: סחר בינלאומי", labelDarkMode: "מצב כהה", labelLanguage: "שפה: ",
+            labelStartYear: "שנת התחלה", labelEndYear: "שנת סיום", labelReportingCountry: "מדינה מדווחת",
+            labelPartnerCountry: "מדינת שותף", labelTradeCategory: "קטגוריית סחר", loadingText: "טוען...",
+            loadingTradeData: "טוען נתוני סחר...", errorLoadingCountryList: "שגיאה בטעינת רשימת המדינות: {{message}}",
+            errorFetchTradeData: "כשלון באחזור נתוני סחר: {{message}}",
+            errorNoData: "לא נמצאו נתוני סחר עבור {{reporter}} ו-{{partner}} (קטגוריה: {{category}}) לשנים {{years}}. ייתכן שהנתונים אינם זמינים.",
+            errorInvalidYearRange: "אנא בחר/י טווח שנים תקין.", errorMaxYearRange: "אנא בחר/י טווח של {{maxYears}} שנים או פחות.",
+            errorSameCountry: "מדינה מדווחת ומדינת שותף אינן יכולות להיות זהות (אלא אם אחת היא \"עולם\"). אנא בחר/י מדינות שונות.",
+            errorInvalidSelection: "בחירה לא תקינה", errorRenderingChart: "שגיאה בהצגת התרשים.",
+            chartTitleDefault: "בחר/י מדינות להצגת נתוני סחר", chartTitleLoading: "טוען נתוני סחר...",
+            chartTitleError: "כשלון בטעינת נתונים", chartTitleNoData: "אין נתונים זמינים לבחירה/לתקופה זו",
+            chartTitlePattern: "סחר: {{reporter}} <=> {{partner}} ({{category}})", chartLegendImports: "יבוא ע\"י המדווחת",
+            chartLegendExports: "יצוא ע\"י המדווחת", chartAxisYLabel: "ערך הסחר (דולר ארה\"ב)", chartAxisXLabel: "שנה",
+            optionSelectCountry: "בחר/י מדינה...", optionTOTAL: "סחר כולל", optionAGRMULTI: "חקלאות",
+            option25: "מינרלים: מלח, אבן, מלט", option27: "מינרלים: דלקים, שמנים", option71: "מינרלים: פנינים, אבני חן, יהלומים",
+            option72: "מינרלים: ברזל ופלדה", option28: "כימיקלים: אי-אורגניים", option29: "כימיקלים: אורגניים",
+            option30: "מוצרים פרמצבטיים", option39: "פלסטיק ומוצריו", option64: "הנעלה, חותלות",
+            option61: "ביגוד: סרוגים", option62: "ביגוד: לא סרוגים", option84: "מכונות ומכשירים מכניים",
+            option85: "מכונות וציוד חשמליים", option87: "כלי רכב (מכוניות, משאיות וכו')", option88: "כלי טיס, חלליות וחלקיהם",
+            option90: "מכשירים אופטיים, צילום, רפואיים", option94: "רהיטים, מצעים, מנורות"
+        }
+    };
+
+    let currentLang = 'en'; // Default language ('en' or 'he')
+
+    // Simple Translation Function
+    function getText(key, options = {}) {
+        let text = translations[currentLang]?.[key] || translations['en']?.[key] || `MissingKey: ${key}`;
+        for (const optKey in options) {
+            text = text.replace(new RegExp(`{{${optKey}}}`, 'g'), options[optKey]);
+        }
+        return text;
+    }
+
+    // UI Update Function for Static Text and Dropdowns
+    function updateUIText() {
+        // Update elements marked with data-translate-key
+        document.querySelectorAll('[data-translate-key]').forEach(el => {
+            const key = el.getAttribute('data-translate-key');
+            el.textContent = getText(key);
+        });
+
+        // Update trade category dropdown options
+        const categorySelect = document.getElementById('tradeCategory'); // Find element again
+        if (categorySelect) {
+             categorySelect.querySelectorAll('option').forEach(opt => {
+                 if (opt.value) {
+                     const key = 'option' + opt.value.replace(/[^a-zA-Z0-9]/g, '');
+                     opt.textContent = getText(key, { defaultValue: opt.textContent }); // Pass original text as fallback
+                 }
+             });
+        }
+
+        // Update country dropdown placeholders
+        updateCountryPlaceholdersManual();
+
+        // Update HTML direction attribute
+        document.documentElement.dir = currentLang === 'he' ? 'rtl' : 'ltr';
+        document.documentElement.lang = currentLang; // Also set lang attribute
+    }
+
+    // Helper for country placeholders
+    function updateCountryPlaceholdersManual() {
+        const phKey = 'optionSelectCountry';
+        const placeholderText = getText(phKey);
+        const reportingSelect = document.getElementById('reportingCountry'); // Find element
+        const partnerSelect = document.getElementById('partnerCountry'); // Find element
+        const phRep = reportingSelect?.querySelector('option[value=""]');
+        const phPart = partnerSelect?.querySelector('option[value=""]');
+        if (phRep) phRep.textContent = placeholderText;
+        if (phPart) phPart.textContent = placeholderText;
+    }
+
+    // Language Switching Logic
+    function setLanguage(lang) {
+        if (lang === currentLang || !translations[lang]) return;
+        currentLang = lang;
+        console.log("Language set to:", currentLang);
+        updateUIText(); // Update static text
+        updateLanguageButtonStates(); // Update button appearance
+
+        // Re-run current selection to update dynamic elements like chart titles/legends
+        // Ensure handleSelectionChange is defined and accessible
+        if (typeof handleSelectionChange === 'function') {
+            // Check if selections are valid before refreshing potentially empty chart
+             const reportingSelect = document.getElementById('reportingCountry');
+             const partnerSelect = document.getElementById('partnerCountry');
+             if (reportingSelect?.value && partnerSelect?.value) {
+                 handleSelectionChange();
+             } else {
+                 // If no selection, just update the default title
+                 const chartTitleElement = document.getElementById('chartTitle');
+                 if (chartTitleElement) {
+                    chartTitleElement.textContent = getText('chartTitleDefault');
+                    chartTitleElement.setAttribute('data-translate-key','chartTitleDefault');
+                 }
+                 // Also update chart axes/legends if chart exists but has no data
+                 if(window.chartInstance) { // Access chartInstance if global
+                     updateChart(); // Call update chart to redraw axes/legends
+                 }
+             }
+        } else {
+            console.error("handleSelectionChange function not found for language update.");
+        }
+    }
+
+    function updateLanguageButtonStates() {
+         const langButtonEN = document.getElementById('lang-en'); // Find element
+         const langButtonHE = document.getElementById('lang-he'); // Find element
+         if (!langButtonEN || !langButtonHE) return; // Exit if buttons not found
+
+        if (currentLang === 'en') {
+            langButtonEN.classList.replace('btn-outline-secondary', 'btn-primary');
+            langButtonEN.disabled = true;
+            langButtonHE.classList.replace('btn-primary', 'btn-outline-secondary');
+            langButtonHE.disabled = false;
+        } else { // 'he'
+            langButtonHE.classList.replace('btn-outline-secondary', 'btn-primary');
+            langButtonHE.disabled = true;
+            langButtonEN.classList.replace('btn-primary', 'btn-outline-secondary');
+            langButtonEN.disabled = false;
+        }
+    }
+
+    // --- END: Manual Translation Code ---
+
     const reportingCountrySelect = document.getElementById('reportingCountry');
     const partnerCountrySelect = document.getElementById('partnerCountry');
     const categorySelect = document.getElementById('tradeCategory');
@@ -15,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const commodityCodes = {
         'TOTAL': 'TOTAL',
-        'AG2': 'AG2',
+        'AGR_MULTI': 'AGR_MULTI',
         '25': '25', // Minerals: Salt, Stone, Cement
         '27': '27', // Minerals: Fuels, Oils
         '71': '71', // Minerals: Pearls, Gems, Diamonds
@@ -287,9 +442,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleSelectionChange() {
         const reporterId = reportingCountrySelect.value;
         const partnerId = partnerCountrySelect.value;
-        const categoryCode = commodityCodes[categorySelect.value] || 'TOTAL';
+        let categoryCode = commodityCodes[categorySelect.value] || 'TOTAL';
         const startYear = parseInt(startYearSelect.value, 10);
         const endYear = parseInt(endYearSelect.value, 10);
+
+        if (categoryCode === 'AGR_MULTI') {
+            // Replace the special code with the actual list of HS chapters 01-24
+            categoryCode = '01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24';
+            console.log("Requesting combined agriculture chapters:", categoryCode);
+        }
 
         if (!startYear || !endYear || startYear > endYear) {
             showError("Please select a valid year range.");
@@ -367,6 +528,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setupThemeToggleListener(); // Set up the listener for theme changes
     }
+
+        // Add language button listeners AFTER defining setLanguage
+        const langButtonEN = document.getElementById('lang-en'); // Find element again
+        const langButtonHE = document.getElementById('lang-he'); // Find element again
+        if(langButtonEN) langButtonEN.addEventListener('click', () => setLanguage('en'));
+        if(langButtonHE) langButtonHE.addEventListener('click', () => setLanguage('he'));
 
     init();
 });

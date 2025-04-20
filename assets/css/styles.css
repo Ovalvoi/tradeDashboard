@@ -132,15 +132,12 @@ h1
 .form-check,
 .form-switch
 {
-    justify-content: left;
-    text-align: center;
-    display: flex;
+    display: block;
     align-items: center;
-    flex: auto;
-    padding-left: 1.5em; /* Align with Bootstrap defaults better */
 }
 
 .form-check-label {
+    translate: 0px -0.1em;
     padding-left: 0.5em; /* Space between switch and label */
     color: var(--text); /* Ensure label uses theme color */
     transition: color 0.3s ease;

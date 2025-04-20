@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>International Trade Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <title>International Trade Dashboard</title> 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" 
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="icon" href="assets/img/tradeB.png" type="image/x-icon">    
     <link rel="stylesheet" href="assets/css/styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <script src="assets/js/main.js"></script>
@@ -12,50 +14,59 @@
 <body>
     <div class="container py-4">
         <div class="d-flex justify-content-between align-items-center">
-            <h1>Trade Dashboard</h1>
+            <h1 data-translate-key="dashboardTitle">Trade Dashboard</h1>
         </div>
+
+        <div id="language-switcher" class="mt-2 mb-3">
+             <span id="language-label" data-translate-key="labelLanguage">Language: </span>
+            <button id="lang-en" class="btn btn-sm btn-outline-secondary" title="English">
+                🇺🇸 EN
+            </button>
+            <button id="lang-he" class="btn btn-sm btn-outline-secondary" title="עברית (Hebrew)">
+                🇮🇱 HE
+            </button>
+        </div>
+        <hr>
 
         <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" id="darkModeToggle" />
-            <label class="form-check-label" for="darkModeToggle">Dark Mode</label>
+             <label class="form-check-label" for="darkModeToggle" data-translate-key="labelDarkMode">Dark Mode</label>
         </div>
 
         <hr>
 
         <div class="row mb-3 g-3">
             <div class="col-md-6">
-                <label for="startYear" class="form-label">Start Year</label>
+                 <label for="startYear" class="form-label" data-translate-key="labelStartYear">Start Year</label>
                 <input type="number" class="form-select" id="startYear" value="2013" min="1988" max="2025">
             </div>
-
             <div class="col-md-6">
-                <label for="endYear" class="form-label">End Year</label>
+                 <label for="endYear" class="form-label" data-translate-key="labelEndYear">End Year</label>
                 <input type="number" class="form-select" id="endYear" value="2024" min="1988" max="2025">
             </div>
         </div>
 
         <div class="row mb-3 g-3">
             <div class="col-md-6">
-                <label for="reportingCountry" class="form-label">Reporting Country</label>
+                 <label for="reportingCountry" class="form-label" data-translate-key="labelReportingCountry">Reporting Country</label>
                 <select class="form-select" id="reportingCountry">
                     <option value="">Select Country...</option>
                 </select>
             </div>
-
             <div class="col-md-6">
-                <label for="partnerCountry" class="form-label">Partner Country</label>
+                 <label for="partnerCountry" class="form-label" data-translate-key="labelPartnerCountry">Partner Country</label>
                 <select class="form-select" id="partnerCountry">
-                    <option value="">Select Country...</option>
+                     <option value="">Select Country...</option>
                 </select>
             </div>
         </div>
 
         <div class="row mb-3 g-3">
             <div class="col-md-12">
-                <label for="tradeCategory" class="form-label">Trade Category</label>
+                 <label for="tradeCategory" class="form-label" data-translate-key="labelTradeCategory">Trade Category</label>
                 <select class="form-select" id="tradeCategory">
-                    <option value="TOTAL">Total Trade</option>
-                    <option value="AG2">Agriculture (Aggregate)</option>
+                     <option value="TOTAL">Total Trade</option>
+                    <option value="AGR_MULTI">Agriculture</option>
                     <option value="25">Minerals: Salt, Stone, Cement</option>
                     <option value="27">Minerals: Fuels, Oils</option>
                     <option value="71">Minerals: Pearls, Gems, Diamonds</option>
@@ -73,24 +84,22 @@
                     <option value="88">Aircraft, Spacecraft & Parts</option>
                     <option value="90">Optical, Photo, Medical Instruments</option>
                     <option value="94">Furniture, Bedding, Lamps</option>
-                    </select>
+                </select>
             </div>
-       </div>
-
-         <div id="loadingIndicator" class="text-center my-3" style="display: none;">
-             <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p>Loading trade data...</p>
         </div>
-         <div id="errorDisplay" class="alert alert-danger mt-3" style="display: none;"></div>
 
+        <div id="loadingIndicator" class="text-center my-3" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                 <span class="visually-hidden" data-translate-key="loadingText">Loading...</span>
+            </div>
+             <p data-translate-key="loadingTradeData">Loading trade data...</p>
+        </div>
+        <div id="errorDisplay" class="alert alert-danger mt-3" style="display: none;"></div>
 
         <div class="card p-3 mb-4 shadow-sm">
-             <h5 id="chartTitle" class="card-title text-center mb-3">Select countries to view trade data</h5>
-            <canvas id="tradeChart" height="120"></canvas> </div>
+             <h5 id="chartTitle" class="card-title text-center mb-3" data-translate-key="chartTitleDefault">Select countries to view trade data</h5>
+            <canvas id="tradeChart" height="120"></canvas>
+        </div>
     </div>
-
-
 </body>
 </html>
