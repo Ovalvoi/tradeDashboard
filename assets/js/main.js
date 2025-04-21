@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const translations = {
         // English Translations (Fallback)
         en: {
-            dashboardTitle: "Trade Dashboard", labelDarkMode: "Dark Mode", labelLanguage: "Language: ",
+            dashboardTitle: "International Trade Dashboard", labelDarkMode: "Dark Mode", labelLanguage: "Language: ",
             labelStartYear: "Start Year", labelEndYear: "End Year", labelReportingCountry: "Reporting Country",
             labelPartnerCountry: "Partner Country", labelTradeCategory: "Trade Category", loadingText: "Loading...",
             loadingTradeData: "Loading trade data...", errorLoadingCountryList: "Could not load country list: {{message}}",
@@ -164,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startYearSelect = document.getElementById('startYear');
     const endYearSelect = document.getElementById('endYear');
     const darkModeToggle = document.getElementById('darkModeToggle');
+    const switchButton = document.getElementById('switch');
 
     let chartInstance = null;
     let currentChartData = null;
@@ -191,6 +192,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add mappings for any other options you included in HTML
         // e.g., '76': '76' for Aluminum
     };
+
+    function handleCountrySwitch() {
+        const currentReporterValue = reportingCountrySelect.value;
+        const currentPartnerValue = partnerCountrySelect.value;
+    
+        reportingCountrySelect.value = currentPartnerValue;
+        partnerCountrySelect.value = currentReporterValue;
+    
+        handleSelectionChange();
+    }
+
 
     function showLoading(isLoading) {
         loadingIndicator.style.display = isLoading ? 'block' : 'none';
@@ -525,6 +537,12 @@ document.addEventListener('DOMContentLoaded', () => {
         categorySelect.addEventListener('change', handleSelectionChange);
         startYearSelect.addEventListener('change', handleSelectionChange);
         endYearSelect.addEventListener('change', handleSelectionChange);
+
+        if (switchButton) { // Check if the button exists
+            switchButton.addEventListener('click', handleCountrySwitch);
+       } else {
+            console.warn("Switch button element not found.");
+       }
 
         setupThemeToggleListener(); // Set up the listener for theme changes
     }
