@@ -24,7 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
             option30: "Pharmaceutical Products", option39: "Plastics & Articles Thereof", option64: "Footwear, Gaiters",
             option61: "Clothing: Knitted Apparel", option62: "Clothing: Non-Knitted Apparel", option84: "Machinery & Mechanical Appliances",
             option85: "Electrical Machinery & Equipment", option87: "Vehicles (Cars, Trucks, etc.)", option88: "Aircraft, Spacecraft & Parts",
-            option90: "Optical, Photo, Medical Instruments", option94: "Furniture, Bedding, Lamps"
+            option90: "Optical, Photo, Medical Instruments", option94: "Furniture, Bedding, Lamps",
+            footerText: "© 2025 Simple International Trade Dashboard. All rights reserved.",
+            footerText2: "Developed for Dr. Erez Shoshani's Israel's Foreign Policy Course Assignment - Ruppin Academic Center",
+            footerText3: "This dashboard is powered by the UN Comtrade API and Chart.js. Data may not be available for all countries or years.",
         },
         // Hebrew Translations
         he: {
@@ -47,7 +50,10 @@ document.addEventListener('DOMContentLoaded', () => {
             option30: "מוצרים פרמצבטיים", option39: "פלסטיק ומוצריו", option64: "הנעלה, חותלות",
             option61: "ביגוד: סרוגים", option62: "ביגוד: לא סרוגים", option84: "מכונות ומכשירים מכניים",
             option85: "מכונות וציוד חשמליים", option87: "כלי רכב (מכוניות, משאיות וכו')", option88: "כלי טיס, חלליות וחלקיהם",
-            option90: "מכשירים אופטיים, צילום, רפואיים", option94: "רהיטים, מצעים, מנורות"
+            option90: "מכשירים אופטיים, צילום, רפואיים", option94: "רהיטים, מצעים, מנורות",
+            footerText: "© 2025 לוח בקרה פשוט לסחר בינלאומי. כל הזכויות שמורות.",
+            footerText2: " פותח עבור מטלת הקורס 'מדיניות החוץ של ישראל' של דוקטור ארז שושני - המרכז האקדמי רופין"  ,
+            footerText3: "לוח בקרה זה מופעל על ידי ממשק ה-API של UN Comtrade ו-Chart.js. ייתכן ונתונים לא יהיו זמינים עבור כל המדינות או השנים."
         }
     };
 
@@ -73,12 +79,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update trade category dropdown options
         const categorySelect = document.getElementById('tradeCategory'); // Find element again
         if (categorySelect) {
-             categorySelect.querySelectorAll('option').forEach(opt => {
-                 if (opt.value) {
-                     const key = 'option' + opt.value.replace(/[^a-zA-Z0-9]/g, '');
-                     opt.textContent = getText(key, { defaultValue: opt.textContent }); // Pass original text as fallback
-                 }
-             });
+            categorySelect.querySelectorAll('option').forEach(opt => {
+                if (opt.value) {
+                    const key = 'option' + opt.value.replace(/[^a-zA-Z0-9]/g, '');
+                    opt.textContent = getText(key, { defaultValue: opt.textContent }); // Pass original text as fallback
+                }
+            });
         }
 
         // Update country dropdown placeholders
@@ -113,31 +119,31 @@ document.addEventListener('DOMContentLoaded', () => {
         // Ensure handleSelectionChange is defined and accessible
         if (typeof handleSelectionChange === 'function') {
             // Check if selections are valid before refreshing potentially empty chart
-             const reportingSelect = document.getElementById('reportingCountry');
-             const partnerSelect = document.getElementById('partnerCountry');
-             if (reportingSelect?.value && partnerSelect?.value) {
-                 handleSelectionChange();
-             } else {
-                 // If no selection, just update the default title
-                 const chartTitleElement = document.getElementById('chartTitle');
-                 if (chartTitleElement) {
+            const reportingSelect = document.getElementById('reportingCountry');
+            const partnerSelect = document.getElementById('partnerCountry');
+            if (reportingSelect?.value && partnerSelect?.value) {
+                handleSelectionChange();
+            } else {
+                // If no selection, just update the default title
+                const chartTitleElement = document.getElementById('chartTitle');
+                if (chartTitleElement) {
                     chartTitleElement.textContent = getText('chartTitleDefault');
-                    chartTitleElement.setAttribute('data-translate-key','chartTitleDefault');
-                 }
-                 // Also update chart axes/legends if chart exists but has no data
-                 if(window.chartInstance) { // Access chartInstance if global
-                     updateChart(); // Call update chart to redraw axes/legends
-                 }
-             }
+                    chartTitleElement.setAttribute('data-translate-key', 'chartTitleDefault');
+                }
+                // Also update chart axes/legends if chart exists but has no data
+                if (window.chartInstance) { // Access chartInstance if global
+                    updateChart(); // Call update chart to redraw axes/legends
+                }
+            }
         } else {
             console.error("handleSelectionChange function not found for language update.");
         }
     }
 
     function updateLanguageButtonStates() {
-         const langButtonEN = document.getElementById('lang-en'); // Find element
-         const langButtonHE = document.getElementById('lang-he'); // Find element
-         if (!langButtonEN || !langButtonHE) return; // Exit if buttons not found
+        const langButtonEN = document.getElementById('lang-en'); // Find element
+        const langButtonHE = document.getElementById('lang-he'); // Find element
+        if (!langButtonEN || !langButtonHE) return; // Exit if buttons not found
 
         if (currentLang === 'en') {
             langButtonEN.classList.replace('btn-outline-secondary', 'btn-primary');
@@ -196,10 +202,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleCountrySwitch() {
         const currentReporterValue = reportingCountrySelect.value;
         const currentPartnerValue = partnerCountrySelect.value;
-    
+
         reportingCountrySelect.value = currentPartnerValue;
         partnerCountrySelect.value = currentReporterValue;
-    
+
         handleSelectionChange();
     }
 
@@ -250,8 +256,8 @@ document.addEventListener('DOMContentLoaded', () => {
         chartTitleElement.textContent = 'Loading trade data...';
         currentChartData = null;
         if (chartInstance) {
-             try { chartInstance.destroy(); } catch(e) {}
-             chartInstance = null;
+            try { chartInstance.destroy(); } catch (e) { }
+            chartInstance = null;
         }
 
         const yearArray = [];
@@ -279,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let errorMsg = `Function Error: ${response.status} ${response.statusText}`;
                 try {
                     const errorText = await response.text();
-                     errorMsg += ` - ${errorText}`;
+                    errorMsg += ` - ${errorText}`;
                 } catch (e) { /* Ignore inability to read body */ }
                 throw new Error(errorMsg);
             }
@@ -360,21 +366,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateChart() {
         if (chartInstance) {
-            try { chartInstance.destroy(); } catch(e) {}
+            try { chartInstance.destroy(); } catch (e) { }
             chartInstance = null;
         }
 
         if (!currentChartData || !chartCanvas) {
-             // Clear canvas if no data or canvas not found
-             if (chartCanvas) {
-                 const ctx = chartCanvas.getContext('2d');
-                 ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
-             }
-             // Make sure title reflects lack of data if appropriate
-             if (!currentChartData && !errorDisplay.textContent.includes('No trade data found')) {
-                 // chartTitleElement.textContent = 'Select options to view data'; // Or keep existing title
-             }
-             return;
+            // Clear canvas if no data or canvas not found
+            if (chartCanvas) {
+                const ctx = chartCanvas.getContext('2d');
+                ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
+            }
+            // Make sure title reflects lack of data if appropriate
+            if (!currentChartData && !errorDisplay.textContent.includes('No trade data found')) {
+                // chartTitleElement.textContent = 'Select options to view data'; // Or keep existing title
+            }
+            return;
         }
 
         const ctx = chartCanvas.getContext('2d');
@@ -385,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: currentChartData,
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false, // Keep this false if it solved the mobile issue
                 color: themeColors.textColor,
                 plugins: {
                     legend: {
@@ -403,155 +409,178 @@ document.addEventListener('DOMContentLoaded', () => {
                         padding: 10,
                         cornerRadius: 4,
                         borderColor: themeColors.tooltipBorderColor,
-                        borderWidth: 1
+                        borderWidth: 1,
+                        callbacks: { // Add or modify this callbacks section
+                            label: function (context) {
+                                let label = context.dataset.label || ''; // e.g., "Imports by Reporter"
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    // Use Intl.NumberFormat for proper currency formatting
+                                    const value = context.parsed.y;
+                                    label += new Intl.NumberFormat('en-US', { // Use locale 'en-US' or adjust
+                                        style: 'currency',
+                                        currency: 'USD', // Specify USD currency
+                                        minimumFractionDigits: 0, // Optional: no decimals
+                                        maximumFractionDigits: 0  // Optional: no decimals
+                                    }).format(value);
+
+                                    // --- OR --- a simpler, less robust way:
+                                    // label += '$' + value.toLocaleString();
+                                }
+                                return label; // Example output: "Imports by Reporter: $1,234,567"
+                            }
+                        }
                     }
                 },
+
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            color: themeColors.textColor,
-                            callback: function (value) {
-                                if (value >= 1e9) return (value / 1e9).toFixed(1) + 'B';
-                                if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
-                                if (value >= 1e3) return (value / 1e3).toFixed(1) + 'K';
-                                return value;
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: themeColors.textColor,
+                                callback: function (value) {
+                                    if (value >= 1e9) return (value / 1e9).toFixed(1) + 'B';
+                                    if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
+                                    if (value >= 1e3) return (value / 1e3).toFixed(1) + 'K';
+                                    return value;
+                                }
+                            },
+                            grid: {
+                                color: themeColors.gridColor
+                            },
+                            title: {
+                                display: true,
+                                text: 'Trade Value (USD)',
+                                color: themeColors.textColor
                             }
                         },
-                        grid: {
-                            color: themeColors.gridColor
-                         },
-                        title: {
-                            display: true,
-                            text: 'Trade Value (USD)',
-                            color: themeColors.textColor
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            color: themeColors.textColor
-                        },
-                        grid: {
-                             color: themeColors.gridColor
-                        },
-                        title: {
-                            display: true,
-                            text: 'Year',
-                            color: themeColors.textColor
+                        x: {
+                            ticks: {
+                                color: themeColors.textColor
+                            },
+                            grid: {
+                                color: themeColors.gridColor
+                            },
+                            title: {
+                                display: true,
+                                text: 'Year',
+                                color: themeColors.textColor
+                            }
                         }
                     }
                 }
+            };
+            try {
+                chartInstance = new Chart(ctx, config);
+            } catch(error) {
+                showError("Error rendering chart.");
+                console.error("Chart rendering error:", error);
             }
-        };
-        try {
-            chartInstance = new Chart(ctx, config);
-        } catch (error) {
-            showError("Error rendering chart.");
-            console.error("Chart rendering error:", error);
-        }
-    }
-
-    function handleSelectionChange() {
-        const reporterId = reportingCountrySelect.value;
-        const partnerId = partnerCountrySelect.value;
-        let categoryCode = commodityCodes[categorySelect.value] || 'TOTAL';
-        const startYear = parseInt(startYearSelect.value, 10);
-        const endYear = parseInt(endYearSelect.value, 10);
-
-        if (categoryCode === 'AGR_MULTI') {
-            // Replace the special code with the actual list of HS chapters 01-24
-            categoryCode = '01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24';
-            console.log("Requesting combined agriculture chapters:", categoryCode);
         }
 
-        if (!startYear || !endYear || startYear > endYear) {
-            showError("Please select a valid year range.");
-            return;
-        }
-        const maxYearRange = 12;
-        if (endYear - startYear + 1 > maxYearRange) {
-             showError(`Please select a range of ${maxYearRange} years or less.`);
-             return;
-        }
+        function handleSelectionChange() {
+            const reporterId = reportingCountrySelect.value;
+            const partnerId = partnerCountrySelect.value;
+            let categoryCode = commodityCodes[categorySelect.value] || 'TOTAL';
+            const startYear = parseInt(startYearSelect.value, 10);
+            const endYear = parseInt(endYearSelect.value, 10);
 
-        if (reporterId && partnerId && categorySelect.value && startYear && endYear) {
-            if (reporterId === partnerId && reporterId !== '0') {
-                showError('Reporting and partner countries cannot be the same (unless one is "World"). Please select different countries.');
-                if (chartInstance) {
-                    try { chartInstance.destroy(); } catch(e) {}
-                    chartInstance = null;
-                    currentChartData = null;
-                    chartTitleElement.textContent = 'Invalid Selection';
-                }
+            if (categoryCode === 'AGR_MULTI') {
+                // Replace the special code with the actual list of HS chapters 01-24
+                categoryCode = '01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24';
+                console.log("Requesting combined agriculture chapters:", categoryCode);
+            }
+
+            if (!startYear || !endYear || startYear > endYear) {
+                showError("Please select a valid year range.");
                 return;
             }
-            showError(null);
-            fetchTradeData(reporterId, partnerId, categoryCode, startYear, endYear);
-        }
-    }
+            const maxYearRange = 12;
+            if (endYear - startYear + 1 > maxYearRange) {
+                showError(`Please select a range of ${maxYearRange} years or less.`);
+                return;
+            }
 
-    // --- New Dark Mode Logic ---
-
-    function applyTheme(isDark) {
-         document.body.classList.toggle("dark", isDark);
-         // Update chart immediately after theme class is applied
-         // Use a small timeout to ensure CSS variables are propagated
-         setTimeout(updateChart, 50);
-    }
-
-    function initializeTheme() {
-        if (!darkModeToggle) return;
-
-        const savedPreference = localStorage.getItem("darkModeEnabled");
-        let isDarkMode;
-
-        if (savedPreference !== null) {
-            isDarkMode = savedPreference === "true";
-        } else {
-            isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (reporterId && partnerId && categorySelect.value && startYear && endYear) {
+                if (reporterId === partnerId && reporterId !== '0') {
+                    showError('Reporting and partner countries cannot be the same (unless one is "World"). Please select different countries.');
+                    if (chartInstance) {
+                        try { chartInstance.destroy(); } catch (e) { }
+                        chartInstance = null;
+                        currentChartData = null;
+                        chartTitleElement.textContent = 'Invalid Selection';
+                    }
+                    return;
+                }
+                showError(null);
+                fetchTradeData(reporterId, partnerId, categoryCode, startYear, endYear);
+            }
         }
 
-        darkModeToggle.checked = isDarkMode;
-        applyTheme(isDarkMode); // Apply initial theme class
-    }
+        // --- New Dark Mode Logic ---
 
-    function setupThemeToggleListener() {
-         if (!darkModeToggle) return;
+        function applyTheme(isDark) {
+            document.body.classList.toggle("dark", isDark);
+            // Update chart immediately after theme class is applied
+            // Use a small timeout to ensure CSS variables are propagated
+            setTimeout(updateChart, 50);
+        }
 
-         darkModeToggle.addEventListener('change', () => {
-             const isChecked = darkModeToggle.checked;
-             localStorage.setItem("darkModeEnabled", isChecked);
-             applyTheme(isChecked); // Apply theme class and trigger chart update via applyTheme
-         });
-    }
+        function initializeTheme() {
+            if (!darkModeToggle) return;
 
-    // --- Initialization ---
+            const savedPreference = localStorage.getItem("darkModeEnabled");
+            let isDarkMode;
 
-    function init() {
-        initializeTheme(); // Set initial theme based on preference/system
+            if (savedPreference !== null) {
+                isDarkMode = savedPreference === "true";
+            } else {
+                isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            }
 
-        loadCountries(); // Load country data and set defaults
+            darkModeToggle.checked = isDarkMode;
+            applyTheme(isDarkMode); // Apply initial theme class
+        }
 
-        reportingCountrySelect.addEventListener('change', handleSelectionChange);
-        partnerCountrySelect.addEventListener('change', handleSelectionChange);
-        categorySelect.addEventListener('change', handleSelectionChange);
-        startYearSelect.addEventListener('change', handleSelectionChange);
-        endYearSelect.addEventListener('change', handleSelectionChange);
+        function setupThemeToggleListener() {
+            if (!darkModeToggle) return;
 
-        if (switchButton) { // Check if the button exists
-            switchButton.addEventListener('click', handleCountrySwitch);
-       } else {
-            console.warn("Switch button element not found.");
-       }
+            darkModeToggle.addEventListener('change', () => {
+                const isChecked = darkModeToggle.checked;
+                localStorage.setItem("darkModeEnabled", isChecked);
+                applyTheme(isChecked); // Apply theme class and trigger chart update via applyTheme
+            });
+        }
 
-        setupThemeToggleListener(); // Set up the listener for theme changes
-    }
+        // --- Initialization ---
+
+        function init() {
+            initializeTheme(); // Set initial theme based on preference/system
+
+            loadCountries(); // Load country data and set defaults
+
+            reportingCountrySelect.addEventListener('change', handleSelectionChange);
+            partnerCountrySelect.addEventListener('change', handleSelectionChange);
+            categorySelect.addEventListener('change', handleSelectionChange);
+            startYearSelect.addEventListener('change', handleSelectionChange);
+            endYearSelect.addEventListener('change', handleSelectionChange);
+
+            if (switchButton) { // Check if the button exists
+                switchButton.addEventListener('click', handleCountrySwitch);
+            } else {
+                console.warn("Switch button element not found.");
+            }
+
+            setupThemeToggleListener(); // Set up the listener for theme changes
+        }
 
         // Add language button listeners AFTER defining setLanguage
         const langButtonEN = document.getElementById('lang-en'); // Find element again
         const langButtonHE = document.getElementById('lang-he'); // Find element again
-        if(langButtonEN) langButtonEN.addEventListener('click', () => setLanguage('en'));
-        if(langButtonHE) langButtonHE.addEventListener('click', () => setLanguage('he'));
+        if (langButtonEN) langButtonEN.addEventListener('click', () => setLanguage('en'));
+        if (langButtonHE) langButtonHE.addEventListener('click', () => setLanguage('he'));
 
-    init();
-});
+        init();
+    });

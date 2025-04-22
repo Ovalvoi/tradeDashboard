@@ -117,6 +117,7 @@ body.dark #errorDisplay {
 }
 
 
+
 h1
 {
     justify-content: center;
@@ -124,21 +125,25 @@ h1
     display: flex;
     align-items: center;
     flex: auto;
-    padding: 10px;
+    padding: 5px;
+    margin-top: 0px;
     color: var(--text); /* Ensure H1 uses theme color */
     transition: color 0.3s ease;
 }
 
 .form-check,
-.form-switch
+.form-switch,
+.form-check-input
 {
     display: block;
-    align-items: center;
+    margin-bottom: 0;
+    margin-left: 0;
+
 }
 
 .form-check-label {
     translate: 0px -0.1em;
-    padding-left: 0.5em; /* Space between switch and label */
+    padding: 0.5px; /* Space between switch and label */
     color: var(--text); /* Ensure label uses theme color */
     transition: color 0.3s ease;
 }
@@ -174,3 +179,17 @@ body.dark .form-switch .form-check-input:checked {
     align-items: center;
     margin-top: 20px; /* Space above the switch */
 }
+
+#tradeChart {
+    max-height: 65vh; /* Limits height to 65% of the viewport height */
+    /* Or use a pixel value like: max-height: 450px; */
+    width: 100% !important; /* Ensure it tries to take full width */
+    height: auto !important; /* Let Chart.js determine height up to max-height */
+  }
+
+  .p-footer
+  {
+    font-size: 11px;
+    padding: 0px;
+    margin: 0px;
+  }
