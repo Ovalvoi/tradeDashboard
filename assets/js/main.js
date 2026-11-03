@@ -275,21 +275,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ---------- Chart ----------
 
+    // Chart colors come from the CSS theme variables (see styles.css), so light/dark live in one place.
     function getThemeColors() {
-        if (document.body.classList.contains('dark')) {
-            return {
-                textColor: '#ffffff',
-                gridColor: 'rgba(255, 255, 255, 0.15)',
-                tooltipBgColor: '#2c2c2c',
-                tooltipBorderColor: 'rgba(255, 255, 255, 0.2)',
-            };
-        }
-        const style = getComputedStyle(document.documentElement);
+        const style = getComputedStyle(document.body);
+        const css = (name) => style.getPropertyValue(name).trim();
         return {
-            textColor: style.getPropertyValue('--text-light').trim(),
-            gridColor: style.getPropertyValue('--grid-color-light').trim(),
-            tooltipBgColor: style.getPropertyValue('--card-bg-light').trim(),
-            tooltipBorderColor: 'rgba(0, 0, 0, 0.1)',
+            textColor: css('--chart-text'),
+            gridColor: css('--grid-color'),
+            tooltipBgColor: css('--card-bg'),
+            tooltipBorderColor: css('--select-border'),
         };
     }
 
@@ -304,10 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderChart() {
         destroyChart();
-        if (!currentSeries || !chartCanvas) {
-            chartCanvas?.getContext('2d').clearRect(0, 0, chartCanvas.width, chartCanvas.height);
-            return;
-        }
+        if (!currentSeries) return;
         const theme = getThemeColors();
         const axis = (titleKey) => ({
             ticks: { color: theme.textColor },
@@ -404,8 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applyTheme(isDark) {
         document.body.classList.toggle('dark', isDark);
-        // Let CSS variables propagate before reading them for the chart.
-        setTimeout(renderChart, 50);
+        renderChart(); // getComputedStyle already sees the new theme variables
     }
 
     function initializeTheme() {
