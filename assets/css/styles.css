@@ -42,7 +42,8 @@
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
-/* Hebrew reads better in Rubik */
+/* Hebrew reads better in Rubik. The layout itself never mirrors: only text blocks
+   marked data-dir switch to right-to-left (set by main.js). */
 :root[lang="he"] { --font: "Rubik", "Inter", system-ui, -apple-system, "Segoe UI", Arial, sans-serif; }
 
 /* ---------- Base ---------- */
@@ -299,12 +300,7 @@ select option { background: var(--surface); color: var(--text); }
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    direction: ltr;
-    unicode-bidi: isolate;
-    text-align: start;
 }
-
-[dir="rtl"] .stat-value { text-align: right; }
 
 .stat-sub { font-size: 0.78rem; color: var(--muted); min-height: 1.2em; }
 
@@ -377,7 +373,6 @@ th, td {
 
 th:first-child, td:first-child { text-align: start; }
 th { color: var(--text-2); font-weight: 600; }
-td { direction: ltr; unicode-bidi: isolate; }
 
 /* ---------- Footer ---------- */
 .footer {

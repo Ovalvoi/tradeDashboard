@@ -5,23 +5,28 @@ const PROXY_URL = 'https://comtrade-proxy.yuval8787.workers.dev/trade';
 const MAX_YEAR_RANGE = 12;
 const CACHE_PREFIX = 'trade:v2:';
 const AGRICULTURE_CHAPTERS = Array.from({ length: 24 }, (_, i) => String(i + 1).padStart(2, '0')).join(',');
+// Country names the browser renders too long, per language (keyed by ISO code)
+const COUNTRY_NAME_OVERRIDES = { he: { HK: 'הונג קונג' } };
+// Unicode isolates keep a name intact when it sits inside text of the other direction
+const isolate = (s) => `⁨${s}⁩`;
 
 const translations = {
     en: {
-        dashboardTitle: "International Trade Dashboard", labelDarkMode: "Dark Mode", labelLanguage: "Language: ",
+        dashboardTitle: "International Trade Dashboard", labelDarkMode: "Toggle dark mode",
         labelStartYear: "Start Year", labelEndYear: "End Year", labelReportingCountry: "Reporting Country",
-        labelPartnerCountry: "Partner Country", labelTradeCategory: "Trade Category", loadingText: "Loading...",
+        labelPartnerCountry: "Partner Country", labelTradeCategory: "Trade Category",
         loadingTradeData: "Loading trade data...", errorLoadingCountryList: "Could not load country list: {{message}}",
         errorFetchTradeData: "Failed to fetch trade data: {{message}}",
         errorNoData: "No trade data found for {{reporter}} and {{partner}} (Category: {{category}}) for years {{years}}. Data might be unavailable.",
         errorInvalidYearRange: "Please select a valid year range.", errorMaxYearRange: "Please select a range of {{maxYears}} years or less.",
         errorSameCountry: "Reporting and partner countries cannot be the same (unless one is \"World\"). Please select different countries.",
-        errorInvalidSelection: "Invalid Selection", errorRenderingChart: "Error rendering chart.",
+        errorInvalidSelection: "Invalid selection", errorRenderingChart: "Error rendering chart.",
         chartTitleDefault: "Select countries to view trade data", chartTitleLoading: "Loading trade data...",
         chartTitleError: "Failed to load data", chartTitleNoData: "No data available for this selection/period",
-        chartTitlePattern: "Trade: {{reporter}} <=> {{partner}} ({{category}})", chartLegendImports: "Imports by Reporter",
-        chartLegendExports: "Exports by Reporter", chartAxisYLabel: "Trade Value (USD)", chartAxisXLabel: "Year",
-        switchTitle: "Switch Reporting and Partner Countries",
+        chartTitlePattern: "{{reporter}} ↔ {{partner}} · {{category}}",
+        chartLegendExports: "{{reporter}} exports", chartLegendImports: "{{reporter}} imports",
+        chartAxisYLabel: "Trade value (USD)", chartAxisXLabel: "Year",
+        switchTitle: "Switch reporting and partner countries", countryWorld: "World",
         statExports: "Exports", statImports: "Imports", statBalance: "Trade balance", statTotal: "Total trade",
         statInYear: "In {{year}}", statChange: "{{change}} vs {{year}}", showTable: "Show data table",
         optionSelectCountry: "Select Country...", optionTOTAL: "Total Trade", optionAGRMULTI: "Agriculture",
@@ -36,32 +41,33 @@ const translations = {
         footerText3: "This dashboard is powered by the UN Comtrade API and Chart.js. Data may not be available for all countries or years.",
     },
     he: {
-        dashboardTitle: "לוח בקרה: סחר בינלאומי", labelDarkMode: "מצב כהה", labelLanguage: "שפה: ",
-        labelStartYear: "שנת התחלה", labelEndYear: "שנת סיום", labelReportingCountry: "מדינה מדווחת",
-        labelPartnerCountry: "מדינת שותף", labelTradeCategory: "קטגוריית סחר", loadingText: "טוען...",
-        loadingTradeData: "טוען נתוני סחר...", errorLoadingCountryList: "שגיאה בטעינת רשימת המדינות: {{message}}",
-        errorFetchTradeData: "כשלון באחזור נתוני סחר: {{message}}",
-        errorNoData: "לא נמצאו נתוני סחר עבור {{reporter}} ו-{{partner}} (קטגוריה: {{category}}) לשנים {{years}}. ייתכן שהנתונים אינם זמינים.",
-        errorInvalidYearRange: "אנא בחר/י טווח שנים תקין.", errorMaxYearRange: "אנא בחר/י טווח של {{maxYears}} שנים או פחות.",
-        errorSameCountry: "מדינה מדווחת ומדינת שותף אינן יכולות להיות זהות (אלא אם אחת היא \"עולם\"). אנא בחר/י מדינות שונות.",
-        errorInvalidSelection: "בחירה לא תקינה", errorRenderingChart: "שגיאה בהצגת התרשים.",
-        chartTitleDefault: "בחר/י מדינות להצגת נתוני סחר", chartTitleLoading: "טוען נתוני סחר...",
-        chartTitleError: "כשלון בטעינת נתונים", chartTitleNoData: "אין נתונים זמינים לבחירה/לתקופה זו",
-        chartTitlePattern: "סחר: {{reporter}} <=> {{partner}} ({{category}})", chartLegendImports: "יבוא ע\"י המדווחת",
-        chartLegendExports: "יצוא ע\"י המדווחת", chartAxisYLabel: "ערך הסחר (דולר ארה\"ב)", chartAxisXLabel: "שנה",
-        switchTitle: "החלפת המדינה המדווחת ומדינת השותף",
-        statExports: "יצוא", statImports: "יבוא", statBalance: "מאזן סחר", statTotal: "סך הסחר",
+        dashboardTitle: "לוח בקרה לסחר בינלאומי", labelDarkMode: "מעבר בין מצב כהה לבהיר",
+        labelStartYear: "משנת", labelEndYear: "עד שנת", labelReportingCountry: "מדינה מדווחת",
+        labelPartnerCountry: "מדינה שותפה", labelTradeCategory: "תחום סחר",
+        loadingTradeData: "טוען נתוני סחר...", errorLoadingCountryList: "לא ניתן לטעון את רשימת המדינות: {{message}}",
+        errorFetchTradeData: "טעינת נתוני הסחר נכשלה: {{message}}",
+        errorNoData: "לא נמצאו נתוני סחר בין {{reporter}} ל{{partner}} ({{category}}) בשנים {{years}}. ייתכן שהנתונים אינם זמינים.",
+        errorInvalidYearRange: "יש לבחור טווח שנים תקין.", errorMaxYearRange: "ניתן לבחור טווח של עד {{maxYears}} שנים.",
+        errorSameCountry: "המדינה המדווחת והמדינה השותפה לא יכולות להיות זהות (אלא אם אחת מהן היא \"העולם\"). יש לבחור מדינות שונות.",
+        errorInvalidSelection: "בחירה לא תקינה", errorRenderingChart: "אירעה שגיאה בהצגת התרשים.",
+        chartTitleDefault: "בחרו מדינות כדי לראות את נתוני הסחר", chartTitleLoading: "טוען נתוני סחר...",
+        chartTitleError: "טעינת הנתונים נכשלה", chartTitleNoData: "אין נתונים לבחירה או לתקופה זו",
+        chartTitlePattern: "{{reporter}} ↔ {{partner}} · {{category}}",
+        chartLegendExports: "יצוא {{reporter}}", chartLegendImports: "יבוא {{reporter}}",
+        chartAxisYLabel: "ערך הסחר (דולר)", chartAxisXLabel: "שנה",
+        switchTitle: "החלפה בין המדינה המדווחת למדינה השותפה", countryWorld: "העולם",
+        statExports: "יצוא", statImports: "יבוא", statBalance: "מאזן סחר", statTotal: "היקף סחר",
         statInYear: "בשנת {{year}}", statChange: "{{change}} לעומת {{year}}", showTable: "הצגת טבלת נתונים",
-        optionSelectCountry: "בחר/י מדינה...", optionTOTAL: "סחר כולל", optionAGRMULTI: "חקלאות",
-        option25: "מינרלים: מלח, אבן, מלט", option27: "מינרלים: דלקים, שמנים", option71: "מינרלים: פנינים, אבני חן, יהלומים",
-        option72: "מינרלים: ברזל ופלדה", option28: "כימיקלים: אי-אורגניים", option29: "כימיקלים: אורגניים",
-        option30: "מוצרים פרמצבטיים", option39: "פלסטיק ומוצריו", option64: "הנעלה, חותלות",
-        option61: "ביגוד: סרוגים", option62: "ביגוד: לא סרוגים", option84: "מכונות ומכשירים מכניים",
-        option85: "מכונות וציוד חשמליים", option87: "כלי רכב (מכוניות, משאיות וכו')", option88: "כלי טיס, חלליות וחלקיהם",
-        option90: "מכשירים אופטיים, צילום, רפואיים", option94: "רהיטים, מצעים, מנורות",
-        footerText: "© {{year}} לוח בקרה פשוט לסחר בינלאומי. כל הזכויות שמורות.",
-        footerText2: "פותח עבור מטלת הקורס 'מדיניות החוץ של ישראל' של דוקטור ארז שושני - המרכז האקדמי רופין",
-        footerText3: "לוח בקרה זה מופעל על ידי ממשק ה-API של UN Comtrade ו-Chart.js. ייתכן ונתונים לא יהיו זמינים עבור כל המדינות או השנים."
+        optionSelectCountry: "בחרו מדינה...", optionTOTAL: "סך כל הסחר", optionAGRMULTI: "חקלאות ומזון",
+        option25: "מלח, אבן ומלט", option27: "דלקים ושמנים", option71: "יהלומים, אבני חן ופנינים",
+        option72: "ברזל ופלדה", option28: "כימיקלים אנאורגניים", option29: "כימיקלים אורגניים",
+        option30: "תרופות ומוצרי פרמצבטיקה", option39: "פלסטיק ומוצריו", option64: "הנעלה",
+        option61: "ביגוד סרוג", option62: "ביגוד שאינו סרוג", option84: "מכונות וציוד מכני",
+        option85: "מכונות וציוד חשמלי", option87: "כלי רכב", option88: "כלי טיס וחלליות",
+        option90: "מכשירים אופטיים, רפואיים ומדעיים", option94: "רהיטים, מצעים ותאורה",
+        footerText: "© {{year}} לוח בקרה לסחר בינלאומי. כל הזכויות שמורות.",
+        footerText2: "פותח במסגרת מטלה בקורס \"מדיניות החוץ של ישראל\" של ד\"ר ארז שושני, המרכז האקדמי רופין",
+        footerText3: "הנתונים מגיעים ממאגר UN Comtrade של האו\"ם, והתרשימים נבנו בעזרת Chart.js. ייתכן שחלק מהנתונים אינם זמינים עבור מדינות או שנים מסוימות.",
     }
 };
 
@@ -85,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const langButtons = { en: $('lang-en'), he: $('lang-he') };
 
     let currentLang = safeStorageGet(localStorage, 'lang') === 'he' ? 'he' : 'en';
+    let countries = []; // from countries.json: { id, iso2, text }
     let chartInstance = null;
     // Processed data: { labels: [...years], imports: [...], exports: [...] }
     let currentSeries = null;
@@ -114,11 +121,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return select.options[select.selectedIndex]?.text ?? '';
     }
 
-    function selectionNames() {
+    // Isolated names are for HTML text; the chart canvas gets plain names.
+    function selectionNames(isolated = true) {
+        const wrap = isolated ? isolate : (s) => s;
         return {
-            reporter: selectedText(reportingCountrySelect),
-            partner: selectedText(partnerCountrySelect),
-            category: selectedText(categorySelect),
+            reporter: wrap(selectedText(reportingCountrySelect)),
+            partner: wrap(selectedText(partnerCountrySelect)),
+            category: wrap(selectedText(categorySelect)),
         };
     }
 
@@ -136,10 +145,20 @@ document.addEventListener('DOMContentLoaded', () => {
         errorDisplay.style.display = message ? 'block' : 'none';
     }
 
-    const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-    const usdCompact = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 1 });
-    const formatUsd = (v) => (v == null ? '—' : usd.format(v));
-    const formatCompact = (v) => (v == null ? '—' : usdCompact.format(v));
+    // Exact amounts (table, tooltip) look the same in both languages.
+    const usdExact = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+    const formatUsd = (v) => (v == null ? '—' : usdExact.format(v));
+
+    // Short amounts: "$4.2B" in English, "4.2 מיליארד $" in Hebrew.
+    const usdCompactEn = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 1 });
+    const heNumber = new Intl.NumberFormat('he-IL', { maximumFractionDigits: 1 });
+    const HE_UNITS = [[1e9, 'מיליארד'], [1e6, 'מיליון'], [1e3, 'אלף']];
+    function formatCompact(v) {
+        if (v == null) return '—';
+        if (currentLang !== 'he') return usdCompactEn.format(v);
+        const unit = HE_UNITS.find(([n]) => Math.abs(v) >= n);
+        return unit ? `${heNumber.format(v / unit[0])} ${unit[1]} $` : `${heNumber.format(v)} $`;
+    }
 
     // ---------- Language ----------
 
@@ -159,8 +178,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const ph = sel.querySelector('option[value=""]');
             if (ph) ph.textContent = getText('optionSelectCountry');
         });
-        root.dir = currentLang === 'he' ? 'rtl' : 'ltr';
+        // The layout never mirrors; only text blocks marked data-dir switch direction.
         root.lang = currentLang;
+        const dir = currentLang === 'he' ? 'rtl' : 'ltr';
+        document.querySelectorAll('[data-dir]').forEach(el => { el.dir = dir; });
+        renderCountryOptions();
         for (const [lang, btn] of Object.entries(langButtons)) {
             btn?.setAttribute('aria-pressed', String(lang === currentLang));
         }
@@ -183,19 +205,35 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('assets/data/countries.json');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const countries = await response.json();
-            countries.sort((a, b) => a.text.localeCompare(b.text));
-            reportingCountrySelect.length = 1;
-            partnerCountrySelect.length = 1;
-            countries.forEach(c => {
-                reportingCountrySelect.add(new Option(c.text, c.id));
-                partnerCountrySelect.add(new Option(c.text, c.id));
-            });
+            countries = await response.json();
+            renderCountryOptions();
             reportingCountrySelect.value = '376'; // Israel
             partnerCountrySelect.value = '31';    // Azerbaijan
             handleSelectionChange();
         } catch (error) {
             showError(getText('errorLoadingCountryList', { message: error.message }));
+        }
+    }
+
+    function countryName(country, regionNames) {
+        if (country.id === '0') return getText('countryWorld');
+        if (currentLang === 'en' || !country.iso2) return country.text;
+        return COUNTRY_NAME_OVERRIDES[currentLang]?.[country.iso2] ?? regionNames?.of(country.iso2) ?? country.text;
+    }
+
+    // (Re)build both country dropdowns in the current language, keeping the selection.
+    function renderCountryOptions() {
+        if (!countries.length) return;
+        let regionNames = null;
+        try { regionNames = new Intl.DisplayNames([currentLang], { type: 'region' }); } catch { /* old browser: English names */ }
+        const list = countries
+            .map(c => ({ id: c.id, name: countryName(c, regionNames) }))
+            .sort((a, b) => (a.id === '0' ? -1 : b.id === '0' ? 1 : a.name.localeCompare(b.name, currentLang)));
+        for (const select of [reportingCountrySelect, partnerCountrySelect]) {
+            const selected = select.value;
+            select.length = 1; // keep the placeholder
+            list.forEach(c => select.add(new Option(c.name, c.id)));
+            select.value = selected;
         }
     }
 
@@ -380,7 +418,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentSeries || typeof Chart === 'undefined') return;
 
         const t = getThemeColors();
-        const rtl = currentLang === 'he';
+        // The chart keeps the same left-to-right layout in both languages; only text direction changes.
+        const textDirection = currentLang === 'he' ? 'rtl' : 'ltr';
+        const { reporter } = selectionNames(false);
         const line = (label, data, color) => ({
             label,
             data,
@@ -402,8 +442,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 data: {
                     labels: currentSeries.labels,
                     datasets: [
-                        line(getText('chartLegendExports'), currentSeries.exports, t.exports),
-                        line(getText('chartLegendImports'), currentSeries.imports, t.imports),
+                        line(getText('chartLegendExports', { reporter }), currentSeries.exports, t.exports),
+                        line(getText('chartLegendImports', { reporter }), currentSeries.imports, t.imports),
                     ],
                 },
                 plugins: [crosshairPlugin],
@@ -418,11 +458,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         legend: {
                             position: 'top',
                             align: 'start',
-                            rtl,
+                            textDirection,
                             labels: { color: t.text2, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, boxHeight: 8, padding: 16, font: { family: t.font, size: 12 } },
                         },
                         tooltip: {
-                            rtl,
+                            rtl: textDirection === 'rtl',
+                            textDirection,
                             backgroundColor: t.surface,
                             titleColor: t.text,
                             bodyColor: t.text2,
@@ -441,18 +482,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     scales: {
                         x: {
-                            reverse: rtl,
                             grid: { display: false },
                             border: { color: t.border },
                             ticks: { color: t.text2, font: { family: t.font } },
                         },
                         y: {
-                            position: rtl ? 'right' : 'left',
                             beginAtZero: true,
                             grid: { color: t.grid },
                             border: { display: false },
                             title: { display: true, text: getText('chartAxisYLabel'), color: t.text2, font: { family: t.font, size: 12 } },
-                            ticks: { color: t.text2, font: { family: t.font }, maxTicksLimit: 6, callback: (v) => usdCompact.format(v) },
+                            ticks: { color: t.text2, font: { family: t.font }, maxTicksLimit: 6, callback: formatCompact },
                         },
                     },
                 },

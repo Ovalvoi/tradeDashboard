@@ -30,12 +30,12 @@
         <div class="wrap topbar-inner">
             <div class="brand">
                 <img src="assets/img/tradeB.png" alt="" class="brand-logo" width="32" height="32">
-                <h1 data-translate-key="dashboardTitle">International Trade Dashboard</h1>
+                <h1 data-dir data-translate-key="dashboardTitle">International Trade Dashboard</h1>
             </div>
             <div class="topbar-actions">
                 <div class="segmented" role="group" aria-label="Language">
-                    <button id="lang-en" type="button" aria-pressed="true">EN</button>
-                    <button id="lang-he" type="button" aria-pressed="false">עב</button>
+                    <button id="lang-en" type="button" lang="en" aria-pressed="true">English</button>
+                    <button id="lang-he" type="button" lang="he" aria-pressed="false">עברית</button>
                 </div>
                 <button id="themeToggle" type="button" class="icon-btn" aria-pressed="false"
                     data-translate-title="labelDarkMode" title="Dark Mode">
@@ -49,7 +49,7 @@
     <main class="wrap">
         <section class="card filters" aria-label="Filters">
             <div class="countries">
-                <div class="field">
+                <div class="field" data-dir>
                     <label for="reportingCountry" data-translate-key="labelReportingCountry">Reporting Country</label>
                     <select id="reportingCountry">
                         <option value="">Select Country...</option>
@@ -59,7 +59,7 @@
                     title="Switch Reporting and Partner Countries">
                     <i class="bi bi-arrow-left-right" aria-hidden="true"></i>
                 </button>
-                <div class="field">
+                <div class="field" data-dir>
                     <label for="partnerCountry" data-translate-key="labelPartnerCountry">Partner Country</label>
                     <select id="partnerCountry">
                         <option value="">Select Country...</option>
@@ -68,7 +68,7 @@
             </div>
 
             <div class="options">
-                <div class="field field-category">
+                <div class="field field-category" data-dir>
                     <label for="tradeCategory" data-translate-key="labelTradeCategory">Trade Category</label>
                     <select id="tradeCategory">
                         <option value="TOTAL" selected>Total Trade</option>
@@ -92,36 +92,36 @@
                         <option value="94">Furniture, Bedding, Lamps</option>
                     </select>
                 </div>
-                <div class="field field-year">
+                <div class="field field-year" data-dir>
                     <label for="startYear" data-translate-key="labelStartYear">Start Year</label>
                     <input type="number" id="startYear" value="2014" min="1988" max="2026" inputmode="numeric">
                 </div>
-                <div class="field field-year">
+                <div class="field field-year" data-dir>
                     <label for="endYear" data-translate-key="labelEndYear">End Year</label>
                     <input type="number" id="endYear" value="2025" min="1988" max="2026" inputmode="numeric">
                 </div>
             </div>
         </section>
 
-        <div id="errorDisplay" class="alert" role="alert" style="display: none;"></div>
+        <div id="errorDisplay" class="alert" data-dir role="alert" style="display: none;"></div>
 
         <section class="stats" id="stats" aria-live="polite" hidden>
-            <div class="stat">
+            <div class="stat" data-dir>
                 <span class="stat-label"><span class="dot dot-exports"></span><span data-translate-key="statExports">Exports</span></span>
                 <span class="stat-value" id="statExports">—</span>
                 <span class="stat-sub" id="statExportsSub"></span>
             </div>
-            <div class="stat">
+            <div class="stat" data-dir>
                 <span class="stat-label"><span class="dot dot-imports"></span><span data-translate-key="statImports">Imports</span></span>
                 <span class="stat-value" id="statImports">—</span>
                 <span class="stat-sub" id="statImportsSub"></span>
             </div>
-            <div class="stat">
+            <div class="stat" data-dir>
                 <span class="stat-label" data-translate-key="statBalance">Trade balance</span>
                 <span class="stat-value" id="statBalance">—</span>
                 <span class="stat-sub" id="statBalanceSub"></span>
             </div>
-            <div class="stat">
+            <div class="stat" data-dir>
                 <span class="stat-label" data-translate-key="statTotal">Total trade</span>
                 <span class="stat-value" id="statTotal">—</span>
                 <span class="stat-sub" id="statTotalSub"></span>
@@ -129,18 +129,18 @@
         </section>
 
         <section class="card chart-card">
-            <h2 id="chartTitle" class="chart-title">Select countries to view trade data</h2>
+            <h2 id="chartTitle" class="chart-title" data-dir>Select countries to view trade data</h2>
             <div class="chart-box">
                 <canvas id="tradeChart" role="img" aria-label="Imports and exports by year"></canvas>
-                <div id="loadingIndicator" class="loading" style="display: none;">
+                <div id="loadingIndicator" class="loading" data-dir style="display: none;">
                     <span class="spinner" aria-hidden="true"></span>
                     <span data-translate-key="loadingTradeData">Loading trade data...</span>
                 </div>
             </div>
             <details class="table-view" id="tableView" hidden>
-                <summary data-translate-key="showTable">Show data table</summary>
+                <summary data-dir data-translate-key="showTable">Show data table</summary>
                 <div class="table-scroll">
-                    <table>
+                    <table dir="ltr">
                         <thead>
                             <tr>
                                 <th data-translate-key="chartAxisXLabel">Year</th>
@@ -156,7 +156,7 @@
         </section>
     </main>
 
-    <footer class="wrap footer">
+    <footer class="wrap footer" data-dir>
         <p data-translate-key="footerText2">Developed for Dr. Erez Shoshani's Israel's Foreign Policy Course Assignment - Ruppin Academic Center</p>
         <p data-translate-key="footerText3">This dashboard is powered by the UN Comtrade API and Chart.js. Data may not be available for all countries or years.</p>
         <p data-translate-key="footerText">© 2026 Simple International Trade Dashboard. All rights reserved.</p>
