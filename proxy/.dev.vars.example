@@ -1,2 +1,3 @@
-COMTRADE_KEY=your-primary-key
-COMTRADE_KEY_2=your-secondary-key
+COMTRADE_KEY=your-api-key
+# Optional backup key, tried if the first is rejected or rate-limited
+# COMTRADE_KEY_2=

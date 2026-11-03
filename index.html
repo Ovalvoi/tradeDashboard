@@ -5,125 +5,162 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>International Trade Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <meta name="description" content="Explore imports and exports between countries over time, using UN Comtrade data.">
+    <script>
+        // Apply the saved/system theme before first paint to avoid a light flash.
+        (function () {
+            var saved = null;
+            try { saved = localStorage.getItem('darkModeEnabled'); } catch (e) { }
+            var dark = saved !== null ? saved === 'true' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (dark) document.documentElement.classList.add('dark');
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="icon" href="assets/img/tradeB.png" type="image/x-icon">
+    <link rel="icon" href="assets/img/tradeB.png" type="image/png">
     <link rel="stylesheet" href="assets/css/styles.css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js" defer></script>
     <script src="assets/js/main.js" defer></script>
 </head>
 
 <body>
-    <div class="container py-4">
-        <div class="d-flex justify-content-between align-items-center">
-            <h1 data-translate-key="dashboardTitle">International Trade Dashboard</h1>
-
-        </div>
-
-        <div id="language-switcher" class="mt-0 mb-0 d-flex align-items-center">
-            <span id="language-label" data-translate-key="labelLanguage" class="ms-1">Language: </span>
-            <button id="lang-en" class="btn btn-sm btn-outline-secondary ms-1" title="English">
-                🇺🇸 EN
-            </button>
-            <button id="lang-he" class="btn btn-sm btn-outline-secondary ms-1" title="עברית (Hebrew)">
-                🇮🇱 HE
-            </button>
-
-            <div class="form-check form-switch ms-3">
-                <input class="form-check-input" type="checkbox" id="darkModeToggle" />
-                <label class="form-check-label" for="darkModeToggle" data-translate-key="labelDarkMode">Dark
-                    Mode</label>
+    <header class="topbar">
+        <div class="wrap topbar-inner">
+            <div class="brand">
+                <img src="assets/img/tradeB.png" alt="" class="brand-logo" width="32" height="32">
+                <h1 data-translate-key="dashboardTitle">International Trade Dashboard</h1>
             </div>
-        </div>
-
-
-
-        <hr>
-        <div class="row mb-3 g-3">
-            <div class="col-md-6">
-                <label for="startYear" class="form-label" data-translate-key="labelStartYear">Start Year</label>
-                <input type="number" class="form-select" id="startYear" value="2014" min="1988" max="2050">
-            </div>
-            <div class="col-md-6">
-                <label for="endYear" class="form-label" data-translate-key="labelEndYear">End Year</label>
-                <input type="number" class="form-select" id="endYear" value="2025" min="1988" max="2050">
-            </div>
-        </div>
-
-        <div class="row mb-3 g-3 align-items-end">
-
-            <div class="col-md"> <label for="reportingCountry" class="form-label"
-                    data-translate-key="labelReportingCountry">Reporting Country</label>
-                <select class="form-select" id="reportingCountry">
-                    <option value="">Select Country...</option>
-                </select>
-            </div>
-
-            <div class="col-auto"> <button id="switch" class="btn btn-secondary"
-                    title="Switch Reporting and Partner Countries">
-                    <i class="bi bi-arrow-left-right"></i>
+            <div class="topbar-actions">
+                <div class="segmented" role="group" aria-label="Language">
+                    <button id="lang-en" type="button" aria-pressed="true">EN</button>
+                    <button id="lang-he" type="button" aria-pressed="false">עב</button>
+                </div>
+                <button id="themeToggle" type="button" class="icon-btn" aria-pressed="false"
+                    data-translate-title="labelDarkMode" title="Dark Mode">
+                    <i class="bi bi-moon-stars icon-dark" aria-hidden="true"></i>
+                    <i class="bi bi-sun icon-light" aria-hidden="true"></i>
                 </button>
             </div>
+        </div>
+    </header>
 
-            <div class="col-md"> <label for="partnerCountry" class="form-label"
-                    data-translate-key="labelPartnerCountry">Partner Country</label>
-                <select class="form-select" id="partnerCountry">
-                    <option value="">Select Country...</option>
-                </select>
+    <main class="wrap">
+        <section class="card filters" aria-label="Filters">
+            <div class="countries">
+                <div class="field">
+                    <label for="reportingCountry" data-translate-key="labelReportingCountry">Reporting Country</label>
+                    <select id="reportingCountry">
+                        <option value="">Select Country...</option>
+                    </select>
+                </div>
+                <button id="switch" type="button" class="icon-btn swap-btn" data-translate-title="switchTitle"
+                    title="Switch Reporting and Partner Countries">
+                    <i class="bi bi-arrow-left-right" aria-hidden="true"></i>
+                </button>
+                <div class="field">
+                    <label for="partnerCountry" data-translate-key="labelPartnerCountry">Partner Country</label>
+                    <select id="partnerCountry">
+                        <option value="">Select Country...</option>
+                    </select>
+                </div>
             </div>
 
-        </div>
-
-        <div class="row mb-3 g-3">
-            <div class="col-md-12">
-                <label for="tradeCategory" class="form-label" data-translate-key="labelTradeCategory">Trade
-                    Category</label>
-                <select class="form-select" id="tradeCategory">
-                    <option value="TOTAL" selected>Total Trade</option>
-                    <option value="AGR_MULTI">Agriculture</option>
-                    <option value="25">Minerals: Salt, Stone, Cement</option>
-                    <option value="27">Minerals: Fuels, Oils</option>
-                    <option value="71">Minerals: Pearls, Gems, Diamonds</option>
-                    <option value="72">Minerals: Iron & Steel</option>
-                    <option value="28">Chemicals: Inorganic</option>
-                    <option value="29">Chemicals: Organic</option>
-                    <option value="30">Pharmaceutical Products</option>
-                    <option value="39">Plastics & Articles Thereof</option>
-                    <option value="64">Footwear, Gaiters</option>
-                    <option value="61">Clothing: Knitted Apparel</option>
-                    <option value="62">Clothing: Non-Knitted Apparel</option>
-                    <option value="84">Machinery & Mechanical Appliances</option>
-                    <option value="85">Electrical Machinery & Equipment</option>
-                    <option value="87">Vehicles (Cars, Trucks, etc.)</option>
-                    <option value="88">Aircraft, Spacecraft & Parts</option>
-                    <option value="90">Optical, Photo, Medical Instruments</option>
-                    <option value="94">Furniture, Bedding, Lamps</option>
-                </select>
+            <div class="options">
+                <div class="field field-category">
+                    <label for="tradeCategory" data-translate-key="labelTradeCategory">Trade Category</label>
+                    <select id="tradeCategory">
+                        <option value="TOTAL" selected>Total Trade</option>
+                        <option value="AGR_MULTI">Agriculture</option>
+                        <option value="25">Minerals: Salt, Stone, Cement</option>
+                        <option value="27">Minerals: Fuels, Oils</option>
+                        <option value="71">Minerals: Pearls, Gems, Diamonds</option>
+                        <option value="72">Minerals: Iron & Steel</option>
+                        <option value="28">Chemicals: Inorganic</option>
+                        <option value="29">Chemicals: Organic</option>
+                        <option value="30">Pharmaceutical Products</option>
+                        <option value="39">Plastics & Articles Thereof</option>
+                        <option value="64">Footwear, Gaiters</option>
+                        <option value="61">Clothing: Knitted Apparel</option>
+                        <option value="62">Clothing: Non-Knitted Apparel</option>
+                        <option value="84">Machinery & Mechanical Appliances</option>
+                        <option value="85">Electrical Machinery & Equipment</option>
+                        <option value="87">Vehicles (Cars, Trucks, etc.)</option>
+                        <option value="88">Aircraft, Spacecraft & Parts</option>
+                        <option value="90">Optical, Photo, Medical Instruments</option>
+                        <option value="94">Furniture, Bedding, Lamps</option>
+                    </select>
+                </div>
+                <div class="field field-year">
+                    <label for="startYear" data-translate-key="labelStartYear">Start Year</label>
+                    <input type="number" id="startYear" value="2014" min="1988" max="2026" inputmode="numeric">
+                </div>
+                <div class="field field-year">
+                    <label for="endYear" data-translate-key="labelEndYear">End Year</label>
+                    <input type="number" id="endYear" value="2025" min="1988" max="2026" inputmode="numeric">
+                </div>
             </div>
-        </div>
+        </section>
 
-        <div id="loadingIndicator" class="text-center my-3" style="display: none;">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden" data-translate-key="loadingText">Loading...</span>
+        <div id="errorDisplay" class="alert" role="alert" style="display: none;"></div>
+
+        <section class="stats" id="stats" aria-live="polite" hidden>
+            <div class="stat">
+                <span class="stat-label"><span class="dot dot-exports"></span><span data-translate-key="statExports">Exports</span></span>
+                <span class="stat-value" id="statExports">—</span>
+                <span class="stat-sub" id="statExportsSub"></span>
             </div>
-            <p data-translate-key="loadingTradeData">Loading trade data...</p>
-        </div>
-        <div id="errorDisplay" class="alert alert-danger mt-3" style="display: none;"></div>
+            <div class="stat">
+                <span class="stat-label"><span class="dot dot-imports"></span><span data-translate-key="statImports">Imports</span></span>
+                <span class="stat-value" id="statImports">—</span>
+                <span class="stat-sub" id="statImportsSub"></span>
+            </div>
+            <div class="stat">
+                <span class="stat-label" data-translate-key="statBalance">Trade balance</span>
+                <span class="stat-value" id="statBalance">—</span>
+                <span class="stat-sub" id="statBalanceSub"></span>
+            </div>
+            <div class="stat">
+                <span class="stat-label" data-translate-key="statTotal">Total trade</span>
+                <span class="stat-value" id="statTotal">—</span>
+                <span class="stat-sub" id="statTotalSub"></span>
+            </div>
+        </section>
 
-        <div class="card p-3 mb-4 shadow-sm">
-            <h5 id="chartTitle" class="card-title text-center mb-3" data-translate-key="chartTitleDefault">Select
-                countries to view trade data</h5>
-            <canvas id="tradeChart" height="120"></canvas>
-        </div>
+        <section class="card chart-card">
+            <h2 id="chartTitle" class="chart-title">Select countries to view trade data</h2>
+            <div class="chart-box">
+                <canvas id="tradeChart" role="img" aria-label="Imports and exports by year"></canvas>
+                <div id="loadingIndicator" class="loading" style="display: none;">
+                    <span class="spinner" aria-hidden="true"></span>
+                    <span data-translate-key="loadingTradeData">Loading trade data...</span>
+                </div>
+            </div>
+            <details class="table-view" id="tableView" hidden>
+                <summary data-translate-key="showTable">Show data table</summary>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-translate-key="chartAxisXLabel">Year</th>
+                                <th data-translate-key="statExports">Exports</th>
+                                <th data-translate-key="statImports">Imports</th>
+                                <th data-translate-key="statBalance">Trade balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </details>
+        </section>
+    </main>
 
-        <footer class="text-center mt-4">
-            <p data-translate-key="footerText" class="p-footer">© 2025 Simple International Trade Dashboard. All rights reserved.</p>
-            <p data-translate-key="footerText2" class="p-footer">Developed for Dr. Erez Shoshani's Israel's Foreign Policy Course
-                Assignment - Ruppin Academic Center</p>
-            <p data-translate-key="footerText3" class="p-footer">This dashboard is powered by the UN Comtrade API and Chart.js. Data may not be available for all countries or years.</p>
-        </footer>
-    </div>
+    <footer class="wrap footer">
+        <p data-translate-key="footerText2">Developed for Dr. Erez Shoshani's Israel's Foreign Policy Course Assignment - Ruppin Academic Center</p>
+        <p data-translate-key="footerText3">This dashboard is powered by the UN Comtrade API and Chart.js. Data may not be available for all countries or years.</p>
+        <p data-translate-key="footerText">© 2026 Simple International Trade Dashboard. All rights reserved.</p>
+    </footer>
 </body>
 
 </html>

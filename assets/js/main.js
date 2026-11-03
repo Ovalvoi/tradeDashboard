@@ -22,6 +22,8 @@ const translations = {
         chartTitlePattern: "Trade: {{reporter}} <=> {{partner}} ({{category}})", chartLegendImports: "Imports by Reporter",
         chartLegendExports: "Exports by Reporter", chartAxisYLabel: "Trade Value (USD)", chartAxisXLabel: "Year",
         switchTitle: "Switch Reporting and Partner Countries",
+        statExports: "Exports", statImports: "Imports", statBalance: "Trade balance", statTotal: "Total trade",
+        statInYear: "In {{year}}", statChange: "{{change}} vs {{year}}", showTable: "Show data table",
         optionSelectCountry: "Select Country...", optionTOTAL: "Total Trade", optionAGRMULTI: "Agriculture",
         option25: "Minerals: Salt, Stone, Cement", option27: "Minerals: Fuels, Oils", option71: "Minerals: Pearls, Gems, Diamonds",
         option72: "Minerals: Iron & Steel", option28: "Chemicals: Inorganic", option29: "Chemicals: Organic",
@@ -29,7 +31,7 @@ const translations = {
         option61: "Clothing: Knitted Apparel", option62: "Clothing: Non-Knitted Apparel", option84: "Machinery & Mechanical Appliances",
         option85: "Electrical Machinery & Equipment", option87: "Vehicles (Cars, Trucks, etc.)", option88: "Aircraft, Spacecraft & Parts",
         option90: "Optical, Photo, Medical Instruments", option94: "Furniture, Bedding, Lamps",
-        footerText: "© 2025–{{year}} Simple International Trade Dashboard. All rights reserved.",
+        footerText: "© {{year}} Simple International Trade Dashboard. All rights reserved.",
         footerText2: "Developed for Dr. Erez Shoshani's Israel's Foreign Policy Course Assignment - Ruppin Academic Center",
         footerText3: "This dashboard is powered by the UN Comtrade API and Chart.js. Data may not be available for all countries or years.",
     },
@@ -48,6 +50,8 @@ const translations = {
         chartTitlePattern: "סחר: {{reporter}} <=> {{partner}} ({{category}})", chartLegendImports: "יבוא ע\"י המדווחת",
         chartLegendExports: "יצוא ע\"י המדווחת", chartAxisYLabel: "ערך הסחר (דולר ארה\"ב)", chartAxisXLabel: "שנה",
         switchTitle: "החלפת המדינה המדווחת ומדינת השותף",
+        statExports: "יצוא", statImports: "יבוא", statBalance: "מאזן סחר", statTotal: "סך הסחר",
+        statInYear: "בשנת {{year}}", statChange: "{{change}} לעומת {{year}}", showTable: "הצגת טבלת נתונים",
         optionSelectCountry: "בחר/י מדינה...", optionTOTAL: "סחר כולל", optionAGRMULTI: "חקלאות",
         option25: "מינרלים: מלח, אבן, מלט", option27: "מינרלים: דלקים, שמנים", option71: "מינרלים: פנינים, אבני חן, יהלומים",
         option72: "מינרלים: ברזל ופלדה", option28: "כימיקלים: אי-אורגניים", option29: "כימיקלים: אורגניים",
@@ -55,7 +59,7 @@ const translations = {
         option61: "ביגוד: סרוגים", option62: "ביגוד: לא סרוגים", option84: "מכונות ומכשירים מכניים",
         option85: "מכונות וציוד חשמליים", option87: "כלי רכב (מכוניות, משאיות וכו')", option88: "כלי טיס, חלליות וחלקיהם",
         option90: "מכשירים אופטיים, צילום, רפואיים", option94: "רהיטים, מצעים, מנורות",
-        footerText: "© 2025–{{year}} לוח בקרה פשוט לסחר בינלאומי. כל הזכויות שמורות.",
+        footerText: "© {{year}} לוח בקרה פשוט לסחר בינלאומי. כל הזכויות שמורות.",
         footerText2: "פותח עבור מטלת הקורס 'מדיניות החוץ של ישראל' של דוקטור ארז שושני - המרכז האקדמי רופין",
         footerText3: "לוח בקרה זה מופעל על ידי ממשק ה-API של UN Comtrade ו-Chart.js. ייתכן ונתונים לא יהיו זמינים עבור כל המדינות או השנים."
     }
@@ -63,6 +67,7 @@ const translations = {
 
 document.addEventListener('DOMContentLoaded', () => {
     const $ = (id) => document.getElementById(id);
+    const root = document.documentElement;
     const reportingCountrySelect = $('reportingCountry');
     const partnerCountrySelect = $('partnerCountry');
     const categorySelect = $('tradeCategory');
@@ -72,13 +77,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const chartTitleElement = $('chartTitle');
     const startYearSelect = $('startYear');
     const endYearSelect = $('endYear');
-    const darkModeToggle = $('darkModeToggle');
+    const themeToggle = $('themeToggle');
     const switchButton = $('switch');
+    const statsSection = $('stats');
+    const tableView = $('tableView');
+    const tableBody = $('tableBody');
     const langButtons = { en: $('lang-en'), he: $('lang-he') };
 
     let currentLang = safeStorageGet(localStorage, 'lang') === 'he' ? 'he' : 'en';
     let chartInstance = null;
-    // Processed data for the chart: { labels: [...years], imports: [...], exports: [...] }
+    // Processed data: { labels: [...years], imports: [...], exports: [...] }
     let currentSeries = null;
     // What the chart title shows; re-rendered on language change: { key, options }
     let titleState = { key: 'chartTitleDefault', options: {} };
@@ -120,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showLoading(isLoading) {
-        loadingIndicator.style.display = isLoading ? 'block' : 'none';
+        loadingIndicator.style.display = isLoading ? 'flex' : 'none';
     }
 
     function showError(message) {
@@ -128,12 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
         errorDisplay.style.display = message ? 'block' : 'none';
     }
 
-    function destroyChart() {
-        if (chartInstance) {
-            chartInstance.destroy();
-            chartInstance = null;
-        }
-    }
+    const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+    const usdCompact = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 1 });
+    const formatUsd = (v) => (v == null ? '—' : usd.format(v));
+    const formatCompact = (v) => (v == null ? '—' : usdCompact.format(v));
 
     // ---------- Language ----------
 
@@ -142,6 +148,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('[data-translate-key]').forEach(el => {
             el.textContent = getText(el.getAttribute('data-translate-key'), { year });
         });
+        document.querySelectorAll('[data-translate-title]').forEach(el => {
+            el.title = getText(el.getAttribute('data-translate-title'));
+            el.setAttribute('aria-label', el.title);
+        });
         categorySelect.querySelectorAll('option').forEach(opt => {
             if (opt.value) opt.textContent = getText('option' + opt.value.replace(/[^a-zA-Z0-9]/g, ''));
         });
@@ -149,21 +159,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const ph = sel.querySelector('option[value=""]');
             if (ph) ph.textContent = getText('optionSelectCountry');
         });
-        if (switchButton) switchButton.title = getText('switchTitle');
-        document.documentElement.dir = currentLang === 'he' ? 'rtl' : 'ltr';
-        document.documentElement.lang = currentLang;
-
+        root.dir = currentLang === 'he' ? 'rtl' : 'ltr';
+        root.lang = currentLang;
         for (const [lang, btn] of Object.entries(langButtons)) {
-            if (!btn) continue;
-            const active = lang === currentLang;
-            btn.classList.toggle('btn-primary', active);
-            btn.classList.toggle('btn-outline-secondary', !active);
-            btn.disabled = active;
+            btn?.setAttribute('aria-pressed', String(lang === currentLang));
         }
 
-        // Title and chart depend on language but not on data, so no refetch is needed.
+        // Title, stats and chart depend on language but not on data, so no refetch is needed.
         setTitle(titleState.key, titleState.key === 'chartTitlePattern' ? selectionNames() : titleState.options);
-        renderChart();
+        renderAll();
     }
 
     function setLanguage(lang) {
@@ -219,8 +223,6 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoading(true);
         showError(null);
         setTitle('chartTitleLoading');
-        currentSeries = null;
-        destroyChart();
 
         const years = [];
         for (let y = startYear; y <= endYear; y++) years.push(y);
@@ -238,17 +240,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (rows.length === 0) {
                 showError(getText('errorNoData', { ...selectionNames(), years: `${startYear}-${endYear}` }));
                 setTitle('chartTitleNoData');
-                renderChart();
-                return;
+                currentSeries = null;
+            } else {
+                currentSeries = processData(rows);
+                setTitle('chartTitlePattern', selectionNames());
             }
-            currentSeries = processData(rows);
-            setTitle('chartTitlePattern', selectionNames());
-            renderChart();
+            renderAll();
         } catch (error) {
             if (error.name === 'AbortError') return;
             console.error('Fetch trade data error:', error);
             showError(getText('errorFetchTradeData', { message: error.message }));
             setTitle('chartTitleError');
+            currentSeries = null;
+            renderAll();
         } finally {
             if (controller === inFlight) {
                 showLoading(false);
@@ -273,41 +277,124 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    // ---------- Stats & table ----------
+
+    function renderAll() {
+        renderStats();
+        renderTable();
+        renderChart();
+    }
+
+    function changeText(series, i, labels) {
+        const cur = series[i], prev = series[i - 1];
+        if (cur == null || !prev) return getText('statInYear', { year: labels[i] });
+        const pct = ((cur - prev) / Math.abs(prev)) * 100;
+        const arrow = pct >= 0 ? '▲' : '▼';
+        return getText('statChange', { change: `${arrow} ${Math.abs(pct).toFixed(1)}%`, year: labels[i - 1] });
+    }
+
+    function renderStats() {
+        statsSection.hidden = !currentSeries;
+        if (!currentSeries) return;
+        const { labels, imports, exports } = currentSeries;
+        const i = labels.length - 1; // latest year with data
+        const imp = imports[i], exp = exports[i];
+        const balance = imp != null && exp != null ? exp - imp : null;
+        const total = (imp ?? 0) + (exp ?? 0);
+        const inYear = getText('statInYear', { year: labels[i] });
+
+        $('statExports').textContent = formatCompact(exp);
+        $('statExportsSub').textContent = changeText(exports, i, labels);
+        $('statImports').textContent = formatCompact(imp);
+        $('statImportsSub').textContent = changeText(imports, i, labels);
+        $('statBalance').textContent = balance == null ? '—' : (balance > 0 ? '+' : '') + formatCompact(balance);
+        $('statBalanceSub').textContent = inYear;
+        $('statTotal').textContent = formatCompact(total);
+        $('statTotalSub').textContent = inYear;
+        for (const id of ['statExports', 'statImports', 'statBalance', 'statTotal']) {
+            const el = $(id);
+            el.title = el.textContent;
+        }
+    }
+
+    function renderTable() {
+        tableView.hidden = !currentSeries;
+        tableBody.replaceChildren();
+        if (!currentSeries) return;
+        const { labels, imports, exports } = currentSeries;
+        [...labels].reverse().forEach((year, r) => {
+            const i = labels.length - 1 - r;
+            const balance = imports[i] != null && exports[i] != null ? exports[i] - imports[i] : null;
+            const tr = document.createElement('tr');
+            [year, formatUsd(exports[i]), formatUsd(imports[i]), formatUsd(balance)].forEach(text => {
+                const td = document.createElement('td');
+                td.textContent = text;
+                tr.appendChild(td);
+            });
+            tableBody.appendChild(tr);
+        });
+    }
+
     // ---------- Chart ----------
 
-    // Chart colors come from the CSS theme variables (see styles.css), so light/dark live in one place.
+    // Chart colors come from the CSS theme tokens (styles.css), so light/dark live in one place.
     function getThemeColors() {
-        const style = getComputedStyle(document.body);
+        const style = getComputedStyle(root);
         const css = (name) => style.getPropertyValue(name).trim();
         return {
-            textColor: css('--chart-text'),
-            gridColor: css('--grid-color'),
-            tooltipBgColor: css('--card-bg'),
-            tooltipBorderColor: css('--select-border'),
+            text: css('--text'),
+            text2: css('--text-2'),
+            grid: css('--grid'),
+            surface: css('--surface'),
+            border: css('--border'),
+            exports: css('--series-exports'),
+            imports: css('--series-imports'),
+            font: css('--font'),
         };
     }
 
-    const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-
-    function compactNumber(value) {
-        if (value >= 1e9) return (value / 1e9).toFixed(1) + 'B';
-        if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
-        if (value >= 1e3) return (value / 1e3).toFixed(1) + 'K';
-        return value;
-    }
+    // Vertical guide line at the hovered year.
+    const crosshairPlugin = {
+        id: 'crosshair',
+        afterDatasetsDraw(chart) {
+            const active = chart.tooltip?.getActiveElements?.() ?? [];
+            if (!active.length) return;
+            const { ctx, chartArea } = chart;
+            const x = active[0].element.x;
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(x, chartArea.top);
+            ctx.lineTo(x, chartArea.bottom);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = chart.options.scales.y.grid.color;
+            ctx.stroke();
+            ctx.restore();
+        },
+    };
 
     function renderChart() {
-        destroyChart();
-        if (!currentSeries) return;
-        const theme = getThemeColors();
-        const axis = (titleKey) => ({
-            ticks: { color: theme.textColor },
-            grid: { color: theme.gridColor },
-            title: { display: true, text: getText(titleKey), color: theme.textColor },
+        if (chartInstance) {
+            chartInstance.destroy();
+            chartInstance = null;
+        }
+        if (!currentSeries || typeof Chart === 'undefined') return;
+
+        const t = getThemeColors();
+        const rtl = currentLang === 'he';
+        const line = (label, data, color) => ({
+            label,
+            data,
+            borderColor: color,
+            backgroundColor: color,
+            borderWidth: 2,
+            tension: 0.25,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: color,
+            pointBorderColor: t.surface,
+            pointBorderWidth: 2,
+            spanGaps: false,
         });
-        const y = axis('chartAxisYLabel');
-        y.beginAtZero = true;
-        y.ticks.callback = compactNumber;
 
         try {
             chartInstance = new Chart(chartCanvas.getContext('2d'), {
@@ -315,32 +402,59 @@ document.addEventListener('DOMContentLoaded', () => {
                 data: {
                     labels: currentSeries.labels,
                     datasets: [
-                        { label: getText('chartLegendImports'), data: currentSeries.imports, borderColor: 'rgb(255, 99, 132)', backgroundColor: 'rgba(255, 99, 132, 0.5)', tension: 0.1 },
-                        { label: getText('chartLegendExports'), data: currentSeries.exports, borderColor: 'rgb(54, 162, 235)', backgroundColor: 'rgba(54, 162, 235, 0.5)', tension: 0.1 },
+                        line(getText('chartLegendExports'), currentSeries.exports, t.exports),
+                        line(getText('chartLegendImports'), currentSeries.imports, t.imports),
                     ],
                 },
+                plugins: [crosshairPlugin],
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    color: theme.textColor,
+                    interaction: { mode: 'index', intersect: false },
+                    font: { family: t.font },
+                    color: t.text2,
+                    layout: { padding: { top: 4 } },
                     plugins: {
-                        legend: { labels: { color: theme.textColor } },
+                        legend: {
+                            position: 'top',
+                            align: 'start',
+                            rtl,
+                            labels: { color: t.text2, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, boxHeight: 8, padding: 16, font: { family: t.font, size: 12 } },
+                        },
                         tooltip: {
-                            backgroundColor: theme.tooltipBgColor,
-                            titleColor: theme.textColor,
-                            titleFont: { weight: 'bold' },
-                            bodyColor: theme.textColor,
-                            bodySpacing: 4,
-                            padding: 10,
-                            cornerRadius: 4,
-                            borderColor: theme.tooltipBorderColor,
+                            rtl,
+                            backgroundColor: t.surface,
+                            titleColor: t.text,
+                            bodyColor: t.text2,
+                            borderColor: t.border,
                             borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 10,
+                            boxPadding: 6,
+                            usePointStyle: true,
+                            titleFont: { family: t.font, weight: '600' },
+                            bodyFont: { family: t.font },
                             callbacks: {
-                                label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y == null ? '—' : usd.format(ctx.parsed.y)}`,
+                                label: (ctx) => ` ${ctx.dataset.label}: ${formatUsd(ctx.parsed.y)}`,
                             },
                         },
                     },
-                    scales: { x: axis('chartAxisXLabel'), y },
+                    scales: {
+                        x: {
+                            reverse: rtl,
+                            grid: { display: false },
+                            border: { color: t.border },
+                            ticks: { color: t.text2, font: { family: t.font } },
+                        },
+                        y: {
+                            position: rtl ? 'right' : 'left',
+                            beginAtZero: true,
+                            grid: { color: t.grid },
+                            border: { display: false },
+                            title: { display: true, text: getText('chartAxisYLabel'), color: t.text2, font: { family: t.font, size: 12 } },
+                            ticks: { color: t.text2, font: { family: t.font }, maxTicksLimit: 6, callback: (v) => usdCompact.format(v) },
+                        },
+                    },
                 },
             });
         } catch (error) {
@@ -371,10 +485,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (reporterId === partnerId && reporterId !== '0') {
             inFlight?.abort();
+            showLoading(false);
             showError(getText('errorSameCountry'));
             currentSeries = null;
-            renderChart();
             setTitle('errorInvalidSelection');
+            renderAll();
             return;
         }
         showError(null);
@@ -391,28 +506,23 @@ document.addEventListener('DOMContentLoaded', () => {
         handleSelectionChange();
     }
 
-    // ---------- Theme ----------
+    // ---------- Theme (initial class is set by an inline script in <head>) ----------
 
-    function applyTheme(isDark) {
-        document.body.classList.toggle('dark', isDark);
-        renderChart(); // getComputedStyle already sees the new theme variables
+    function syncThemeButton() {
+        themeToggle?.setAttribute('aria-pressed', String(root.classList.contains('dark')));
     }
 
-    function initializeTheme() {
-        if (!darkModeToggle) return;
-        const saved = safeStorageGet(localStorage, 'darkModeEnabled');
-        const isDark = saved !== null ? saved === 'true' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-        darkModeToggle.checked = isDark;
-        applyTheme(isDark);
-        darkModeToggle.addEventListener('change', () => {
-            safeStorageSet(localStorage, 'darkModeEnabled', darkModeToggle.checked);
-            applyTheme(darkModeToggle.checked);
-        });
-    }
+    themeToggle?.addEventListener('click', () => {
+        const isDark = !root.classList.contains('dark');
+        root.classList.toggle('dark', isDark);
+        safeStorageSet(localStorage, 'darkModeEnabled', String(isDark));
+        syncThemeButton();
+        renderChart(); // getComputedStyle already sees the new theme tokens
+    });
 
     // ---------- Init ----------
 
-    initializeTheme();
+    syncThemeButton();
     updateUIText();
     loadCountries();
 
